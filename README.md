@@ -1,15 +1,15 @@
-<center>
+<p align="center">
     <a href="#">
-        <img src="https://raw.githubusercontent.com/CheeryLee/fastlane-plugin-sapfire/master/assets/sapfire_logo.png" height="128" />
+        <img src="https://raw.githubusercontent.com/CheeryLee/fastlane-plugin-sapfire/master/assets/sapfire_logo.png" height="150" />
     </a>
-</center>
+</p>
 
 # Sapfire
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/CheeryLee/fastlane-plugin-sapfire?display_name=tag)
 
 <br/>
-<center>An incredibly simple and fast way to automate building and deployment <b>Visual C++</b>, <b>.NET</b> and <b>UWP</b> apps</center>
+<p align="center">An incredibly simple and fast way to automate building and deployment <b>Visual C++</b>, <b>.NET</b> and <b>UWP</b> apps</p>
 <br/>
 
 ## What is it?
