@@ -1,0 +1,21 @@
+*.gem
+Gemfile.lock
+
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+fastlane/README.md
+fastlane/report.xml
+
+# IDE
+/.idea/
+
+# rspec failure tracking
+.rspec_status
+
+.DS_Store

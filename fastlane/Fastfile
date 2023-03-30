@@ -1,0 +1,45 @@
+lane :test_build do
+  msbuild_select(ENV["SF_MSBUILD_PATH"])
+  msbuild(
+    project: ENV["SF_PROJECT_PATH"],
+    configuration: "Release",
+    platform: "x64",
+    properties: {
+      "Configuration": "Debug" # test that property will be skipped
+    }
+  )
+end
+
+lane :test_clean_build do
+  msbuild_select(ENV["SF_MSBUILD_PATH"])
+  msbuild(
+    project: ENV["SF_PROJECT_PATH"],
+    configuration: "Release",
+    platform: "x86",
+    clean: true
+  )
+end
+
+lane :test_max_cpu_build do
+  msbuild_select(ENV["SF_MSBUILD_PATH"])
+  msbuild(
+    project: ENV["SF_PROJECT_PATH"],
+    configuration: "Release",
+    platform: "x86",
+    jobs: -1
+  )
+end
+
+lane :test_uwp_build do
+  msbuild_select(ENV["SF_MSBUILD_PATH"])
+  update_uwp_signing_settings(
+    certificate: ENV["SF_CERTIFICATE_PATH"]
+  )
+  build_uwp_app(
+    project: ENV["SF_PROJECT_PATH"],
+    configuration: "Release",
+    platform: "x64",
+    appx_bundle_platforms: "x64|ARM",
+    build_mode: "SideloadOnly",
+  )
+end
