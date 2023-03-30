@@ -11,7 +11,7 @@ module Msbuild
 
       params[:jobs] = 1 if params[:jobs].zero?
       prev_cwd = Dir.pwd
-      working_directory = File.dirname(params[:project])
+      working_directory = File.dirname(File.expand_path(params[:project]))
       msbuild_path = Msbuild.config.msbuild_path
       msbuild_args = get_msbuild_args(params, Msbuild.config.overwritten_props)
 
@@ -47,7 +47,7 @@ module Msbuild
         UI.important("Property #{key} will be ignored. Use `#{overwritten_props[key]}` option instead.")
       end
 
-      appx_output_path = params[:appx_output_path] if
+      appx_output_path = File.expand_path(params[:appx_output_path]) if
         params.values.include?(:appx_output_path) && !params[:appx_output_path].empty?
 
       appx_bundle_platforms = params[:appx_bundle_platforms] if
