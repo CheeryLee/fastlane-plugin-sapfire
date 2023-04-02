@@ -75,7 +75,7 @@ module Fastlane
       end
 
       def self.description
-        "Ensure the right version of .NET is installed and can be used"
+        "Ensures the right version of .NET is installed and can be used"
       end
 
       def self.authors

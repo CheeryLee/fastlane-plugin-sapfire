@@ -58,91 +58,16 @@ fastlane action msbuild # or any action included with this plugin
 ```
 
 ### Actions
-Here is the list of all available actions.
+Here is the list of all available actions. Read the documentation on each one by clicking on the action name.
 
-#### msbuild_select
-
-Changes the MSBuild executable to use. Useful if you have multiple installed versions. Call it before using any other actions.
-
-| Argument | Description                                             |
-|----------|---------------------------------------------------------|
-| `path`   | Path to MSBuild executable. Directly set in action call |
-
-Example:
-
-```ruby
-msbuild_select("/cygdrive/c/Program\ Files/Microsoft\ Visual\ Studio/2022/Community/Msbuild/Current/Bin/MSBuild.exe")
-```
-
-#### msbuild
-
-Wraps all parameters and executes MSBuild.
-
-| Argument        | Description                                                                                                                            | Default |
-|-----------------|----------------------------------------------------------------------------------------------------------------------------------------|---------|
-| `project`       | Path to the SLN-project file                                                                                                           |         |
-| `configuration` | Build configuration                                                                                                                    |         |
-| `platform`      | Target platform                                                                                                                        |         |
-| `restore`       | Restore project prior to build the actual targets                                                                                      | false   |
-| `clean`         | Should the project be cleaned before building it?                                                                                      | false   |
-| `jobs`          | A number of concurrent processes to use when building. Set it to -1 if you want to use up to the number of processors in the computer. | 1       |
-| `properties`    | A dictionary of project properties to be set up, where the key is a property name and the value is it's value                          | empty   |
-
-Example:
-
-```ruby
-msbuild(
-  project: "/cygdrive/c/Projects/My_Project.sln",
-  configuration: "Release",
-  platform: "x86",
-  clean: true,
-  jobs: -1,
-  properties: {
-    "AppxBundlePlatforms": "x64"
-  }
-)
-```
-
-#### build_uwp_app
-
-Alias for the `msbuild` action with additional parameters for UWP. Works only on `windows` platform.
-
-| Argument                | Description                                                                                                                  | Default |
-|-------------------------|------------------------------------------------------------------------------------------------------------------------------|---------|
-| `appx_output_path`      | Defines the folder to store the generated package artifacts. Relative path is a root folder where project is located.        | empty   |
-| `appx_bundle_platforms` | Enables you to define the platforms to include in the bundle.                                                                |         |
-| `build_mode`            | Package build mode. Use `SideloadOnly` for sideloading only or `StoreUpload` for generating the .msixupload/.appxupload file |         |
-| `skip_codesigning`      | Build without package signing                                                                                                | false   |
-
-Example:
-
-```ruby
-build_uwp_app(
-  project: "/cygdrive/c/Projects/My_Project.sln",
-  configuration: "Release",
-  platform: "x86",
-  appx_bundle_platforms: "x86|ARM",
-  build_mode: "SideloadOnly"
-)
-```
-
-#### update_uwp_signing_settings
-
-Configures UWP package signing settings. Works only on `windows` platform. Values that would be set in this action will be applied to all next actions.
-
-| Argument      | Description                                                                                  | Default |
-|---------------|----------------------------------------------------------------------------------------------|---------|
-| `certificate` | The path to the certificate to use. Relative path is a root folder where project is located. |         |
-| `password`    | The password for the private key in the certificate                                          | empty   |
-| `thumbprint`  | This value must match the thumbprint in the signing certificate or be an empty string        | empty   |
-
-Example:
-
-```ruby
-update_uwp_signing_settings(
-  certificate: "./WSACertificate.pfx"
-)
-```
+| Argument                                                                     | Description                                                       | Supported platforms |
+|------------------------------------------------------------------------------|-------------------------------------------------------------------|--------------------:|
+| [`msbuild_select`](docs/actions/msbuild_select.md)                           | Changes the MSBuild executable to use                             |                 all |
+| [`msbuild`](docs/actions/msbuild.md)                                         | Wraps all parameters and executes MSBuild                         |                 all |
+| [`build_uwp_app`](docs/actions/build_uwp_app.md)                             | Alias for the `msbuild` action with additional parameters for UWP |             windows |
+| [`update_uwp_signing_settings`](docs/actions/update_uwp_signing_settings.md) | Configures UWP package signing settings                           |             windows |
+| [`dotnet_select`](docs/actions/dotnet_select.md)                             | Changes the dotnet executable to use                              |                 all |
+| [`ensure_dotnet_version`](docs/actions/ensure_dotnet_version.md)             | Ensures the right version of .NET is installed and can be used    |                 all |
 
 ## Working with SLN solution
 In addition this plugin provides a parser module for Microsoft SLN file format.
