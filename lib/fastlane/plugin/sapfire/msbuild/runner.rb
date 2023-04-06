@@ -69,12 +69,12 @@ module Msbuild
 
       args.append("-p:Configuration=#{params[:configuration]}")
       args.append("-p:Platform=#{params[:platform]}")
-      args.append("-p:AppxPackageDir=#{appx_output_path}") unless appx_output_path.nil?
-      args.append("-p:AppxBundlePlatforms=#{appx_bundle_platforms}") unless appx_bundle_platforms.nil?
+      args.append("-p:AppxPackageDir=\"#{appx_output_path}\"") unless appx_output_path.nil?
+      args.append("-p:AppxBundlePlatforms=\"#{appx_bundle_platforms}\"") unless appx_bundle_platforms.nil?
       args.append("-p:AppxBundle=Always") if Msbuild.config.build_type == Msbuild::BuildType::UWP
       args.append("-p:UapAppxPackageBuildMode=#{build_mode}") unless build_mode.nil?
       args.append("-p:AppxPackageSigningEnabled=#{signing_enabled}") unless signing_enabled.nil?
-      args.append("-p:PackageCertificateKeyFile=#{certificate}") unless certificate.nil?
+      args.append("-p:PackageCertificateKeyFile=\"#{certificate}\"") unless certificate.nil?
       args.append("-p:PackageCertificatePassword=#{certificate_password}") unless certificate_password.nil?
       args.append("-p:PackageCertificateThumbprint=#{certificate_thumbprint}") unless certificate_thumbprint.nil?
       args.append("-m#{params[:jobs].positive? ? ":#{params[:jobs]}" : ""}")
