@@ -1,3 +1,4 @@
+require "open3"
 require "fastlane_core/print_table"
 require_relative "module"
 require_relative "../sln_project/module"
@@ -14,14 +15,15 @@ module Msbuild
       working_directory = File.dirname(File.expand_path(params[:project]))
       msbuild_path = Msbuild.config.msbuild_path
       msbuild_args = get_msbuild_args(params, Msbuild.config.overwritten_props)
+      cmd = "\"#{msbuild_path}\" #{msbuild_args.join(" ")}"
 
       check_configuration_platform(params)
 
       UI.message("Change working directory to #{working_directory}")
       Dir.chdir(working_directory)
 
-      UI.command("#{msbuild_path} #{msbuild_args.join(" ")}")
-      system(msbuild_path, *msbuild_args)
+      UI.command(cmd)
+      Open3.pipeline(cmd)
 
       UI.user_error!("MSBuild execution failed. See the log above.") unless $?.success?
       UI.success("MSBuild has ended successfully") if $?.success?

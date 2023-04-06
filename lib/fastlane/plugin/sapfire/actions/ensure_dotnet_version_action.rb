@@ -1,12 +1,18 @@
+require "open3"
+
 module Fastlane
   module Actions
     class EnsureDotnetVersionAction < Action
       def self.run(params)
         dotnet_path = Actions.lane_context[SharedValues::SF_DOTNET_PATH]
         dotnet_path = "dotnet" if dotnet_path.nil? || dotnet_path.empty?
-        output = FastlaneCore::CommandExecutor.execute(command: "\"#{dotnet_path}\" --list-sdks",
-                                                       print_all: false,
-                                                       print_command: true)
+        cmd = "\"#{dotnet_path}\" --list-sdks"
+
+        UI.command(cmd)
+        stdin, stdout = Open3.popen2(cmd)
+        output = stdout.read
+        stdin.close
+        stdout.close
 
         versions = output.split("\n")
         available_versions = []
