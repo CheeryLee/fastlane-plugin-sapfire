@@ -23,10 +23,18 @@ module Msbuild
       Dir.chdir(working_directory)
 
       UI.command(cmd)
-      Open3.pipeline(cmd)
 
-      UI.user_error!("MSBuild execution failed. See the log above.") unless $?.success?
-      UI.success("MSBuild has ended successfully") if $?.success?
+      Open3.popen2(cmd) do |_, stdout, wait_thr|
+        until stdout.eof?
+          stdout.each do |l|
+            line = l.force_encoding("utf-8").chomp
+            puts line
+          end
+        end
+
+        UI.user_error!("MSBuild execution failed. See the log above.") unless wait_thr.value.success?
+        UI.success("MSBuild has ended successfully") if wait_thr.value.success?
+      end
 
       UI.message("Change working directory back to #{prev_cwd}")
       Dir.chdir(prev_cwd)
