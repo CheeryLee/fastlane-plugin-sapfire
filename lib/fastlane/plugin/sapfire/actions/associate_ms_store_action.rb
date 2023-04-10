@@ -19,7 +19,7 @@ module Fastlane
 
       def self.create_xml(params)
         package_identity = params[:package_identity]
-        manifest_path = params[:manifest]
+        manifest_path = File.expand_path(params[:manifest])
         appxmanifest_xml = get_appxmanifest_xml(manifest_path)
 
         display_name = get_display_name(appxmanifest_xml)
@@ -47,7 +47,7 @@ module Fastlane
         reserved_names = product_reserved_info.add_element("ReservedNames")
         reserved_names.add_element("ReservedName").text = display_name
 
-        working_directory = File.dirname(File.expand_path(manifest_path))
+        working_directory = File.dirname(manifest_path)
         path = File.join(working_directory, XML_NAME)
         save_xml(document, path)
       end
