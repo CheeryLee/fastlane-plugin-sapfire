@@ -44,7 +44,8 @@ module Fastlane
             type: String,
             verify_block: proc do |value|
               UI.user_error!("Path to certificate is invalid") unless value && !value.empty?
-              UI.user_error!("The provided path doesn't point to PFX-file") unless File.exist?(value) && value.end_with?(".pfx")
+              UI.user_error!("The provided path doesn't point to PFX-file") unless
+                File.exist?(File.expand_path(value)) && value.end_with?(".pfx")
             end
           ),
           FastlaneCore::ConfigItem.new(

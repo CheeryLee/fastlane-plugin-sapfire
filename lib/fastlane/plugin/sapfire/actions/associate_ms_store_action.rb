@@ -113,7 +113,8 @@ module Fastlane
             type: String,
             verify_block: proc do |value|
               UI.user_error!("Path to the APPX package manifest is invalid") unless value && !value.empty?
-              UI.user_error!("The provided path doesn't point to AppxManifest-file") unless File.exist?(value) && value.end_with?(".appxmanifest")
+              UI.user_error!("The provided path doesn't point to AppxManifest-file") unless
+                File.exist?(File.expand_path(value)) && value.end_with?(".appxmanifest")
             end
           ),
           FastlaneCore::ConfigItem.new(

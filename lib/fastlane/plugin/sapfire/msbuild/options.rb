@@ -18,7 +18,8 @@ module Msbuild
           type: String,
           verify_block: proc do |value|
             UI.user_error!("Path to SLN-file is invalid") unless value && !value.empty?
-            UI.user_error!("The provided path doesn't point to SLN-file") unless File.exist?(value) && value.end_with?(".sln")
+            UI.user_error!("The provided path doesn't point to SLN-file") unless
+              File.exist?(File.expand_path(value)) && value.end_with?(".sln")
           end
         ),
         FastlaneCore::ConfigItem.new(
