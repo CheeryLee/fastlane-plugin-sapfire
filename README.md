@@ -68,6 +68,7 @@ Here is the list of all available actions. Read the documentation on each one by
 | [`update_uwp_signing_settings`](docs/actions/update_uwp_signing_settings.md) | Configures UWP package signing settings                           |             windows |
 | [`dotnet_select`](docs/actions/dotnet_select.md)                             | Changes the dotnet executable to use                              |                 all |
 | [`ensure_dotnet_version`](docs/actions/ensure_dotnet_version.md)             | Ensures the right version of .NET is installed and can be used    |                 all |
+| [`associate_ms_store`](docs/actions/associate_ms_store.md)                   | Makes a local app manifest needed for Microsoft Store association |             windows |
 
 ## Working with SLN solution
 In addition this plugin provides a parser module for Microsoft SLN file format.
