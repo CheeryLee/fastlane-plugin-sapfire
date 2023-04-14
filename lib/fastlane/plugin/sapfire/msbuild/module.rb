@@ -5,6 +5,7 @@ module Msbuild
     NONE = 0
     GENERIC = 1
     UWP = 2
+    NUGET = 3
   end
 
   class Config

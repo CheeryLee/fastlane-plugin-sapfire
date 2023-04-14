@@ -27,7 +27,7 @@ but also can be used independently via command-line interface.
 > down below to find info of interest.
 
 - [x] Generic MSBuild support
-- [ ] NuGet package building
+- [x] NuGet package building
 - [ ] NuGet package uploading to various repositories
 - [ ] Microsoft Store app submission
 
@@ -69,6 +69,7 @@ Here is the list of all available actions. Read the documentation on each one by
 | [`dotnet_select`](docs/actions/dotnet_select.md)                             | Changes the dotnet executable to use                              |                 all |
 | [`ensure_dotnet_version`](docs/actions/ensure_dotnet_version.md)             | Ensures the right version of .NET is installed and can be used    |                 all |
 | [`associate_ms_store`](docs/actions/associate_ms_store.md)                   | Makes a local app manifest needed for Microsoft Store association |             windows |
+| [`nuget_pack`](docs/actions/nuget_pack.md)                                   | Executes MSBuild to create a NuGet package                        |                 all |
 
 ## Working with SLN solution
 In addition this plugin provides a parser module for Microsoft SLN file format.

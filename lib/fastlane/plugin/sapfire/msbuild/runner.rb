@@ -88,8 +88,10 @@ module Msbuild
       args.append("-p:PackageCertificatePassword=#{certificate_password}") unless certificate_password.nil?
       args.append("-p:PackageCertificateThumbprint=#{certificate_thumbprint}") unless certificate_thumbprint.nil?
       args.append("-m#{params[:jobs].positive? ? ":#{params[:jobs]}" : ""}")
-      args.append("-r") if [true].include?(params[:restore])
+      args.append("-r") if [true].include?(params[:restore]) || Msbuild.config.build_type == Msbuild::BuildType::NUGET
+
       args.append("-t:Clean;Build") if [true].include?(params[:clean])
+      args.append("-t:Pack") if Msbuild.config.build_type == Msbuild::BuildType::NUGET
 
       args
     end
