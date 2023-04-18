@@ -28,7 +28,7 @@ but also can be used independently via command-line interface.
 
 - [x] Generic MSBuild support
 - [x] NuGet package building
-- [ ] NuGet package uploading to various repositories
+- [x] NuGet package uploading to various repositories
 - [ ] Microsoft Store app submission
 
 ## Getting started
@@ -60,16 +60,29 @@ fastlane action msbuild # or any action included with this plugin
 ### Actions
 Here is the list of all available actions. Read the documentation on each one by clicking on the action name.
 
-| Argument                                                                     | Description                                                       | Supported platforms |
-|------------------------------------------------------------------------------|-------------------------------------------------------------------|--------------------:|
-| [`msbuild_select`](docs/actions/msbuild_select.md)                           | Changes the MSBuild executable to use                             |                 all |
-| [`msbuild`](docs/actions/msbuild.md)                                         | Wraps all parameters and executes MSBuild                         |                 all |
-| [`build_uwp_app`](docs/actions/build_uwp_app.md)                             | Alias for the `msbuild` action with additional parameters for UWP |             windows |
-| [`update_uwp_signing_settings`](docs/actions/update_uwp_signing_settings.md) | Configures UWP package signing settings                           |             windows |
-| [`dotnet_select`](docs/actions/dotnet_select.md)                             | Changes the dotnet executable to use                              |                 all |
-| [`ensure_dotnet_version`](docs/actions/ensure_dotnet_version.md)             | Ensures the right version of .NET is installed and can be used    |                 all |
-| [`associate_ms_store`](docs/actions/associate_ms_store.md)                   | Makes a local app manifest needed for Microsoft Store association |             windows |
-| [`nuget_pack`](docs/actions/nuget_pack.md)                                   | Executes MSBuild to create a NuGet package                        |                 all |
+#### 🔨 Building
+
+| Argument                                                       | Description                                                       | Supported platforms |
+|----------------------------------------------------------------|-------------------------------------------------------------------|--------------------:|
+| [msbuild_select](docs/actions/msbuild_select.md)               | Changes the MSBuild executable to use                             |                 all |
+| [msbuild](docs/actions/msbuild.md)                             | Wraps all parameters and executes MSBuild                         |                 all |
+| [build_uwp_app](docs/actions/build_uwp_app.md)                 | Alias for the `msbuild` action with additional parameters for UWP |             windows |
+| [dotnet_select](docs/actions/dotnet_select.md)                 | Changes the dotnet executable to use                              |                 all |
+| [ensure_dotnet_version](docs/actions/ensure_dotnet_version.md) | Ensures the right version of .NET is installed and can be used    |                 all |
+| [associate_ms_store](docs/actions/associate_ms_store.md)       | Makes a local app manifest needed for Microsoft Store association |             windows |
+| [nuget_pack](docs/actions/nuget_pack.md)                       | Executes MSBuild to create a NuGet package                        |                 all |
+
+#### 🔑 Signing
+
+| Argument                                                                   | Description                             | Supported platforms |
+|----------------------------------------------------------------------------|-----------------------------------------|--------------------:|
+| [update_uwp_signing_settings](docs/actions/update_uwp_signing_settings.md) | Configures UWP package signing settings |             windows |
+
+#### 📦 Releasing
+
+| Argument                                     | Description                                     | Supported platforms |
+|----------------------------------------------|-------------------------------------------------|--------------------:|
+| [upload_nuget](docs/actions/upload_nuget.md) | Pushes a package to the server and publishes it |                 all |
 
 ## Working with SLN solution
 In addition this plugin provides a parser module for Microsoft SLN file format.
