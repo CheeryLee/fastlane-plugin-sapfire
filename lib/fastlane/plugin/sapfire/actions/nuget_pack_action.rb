@@ -29,16 +29,11 @@ module Fastlane
 
       def self.rejected_options
         %i[
-          configuration
-          platform
           restore
-          clean
-          build_mode
           appx_output_path
           appx_bundle_platforms
           build_mode
           skip_codesigning
-          properties
         ]
       end
 

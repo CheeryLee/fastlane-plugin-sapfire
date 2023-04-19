@@ -1,11 +1,13 @@
 require "fastlane/action"
+require_relative "../helper/sapfire_helper"
 
 module Fastlane
   module Actions
     class UploadNugetAction < Action
       def self.run(params)
+        UI.user_error!("Can't find dotnet") unless Helper::SapfireHelper.dotnet_specified?
+
         dotnet_path = Actions.lane_context[SharedValues::SF_DOTNET_PATH]
-        dotnet_path = "dotnet" if dotnet_path.nil? || dotnet_path.empty?
         dotnet_args = get_dotnet_args(params)
         cmd = "\"#{dotnet_path}\" nuget push #{dotnet_args.join(" ")}"
 

@@ -8,6 +8,11 @@ module Msbuild
     NUGET = 3
   end
 
+  class MsbuildType
+    EXE = 0
+    LIBRARY = 1
+  end
+
   class Config
     attr_accessor :params
     attr_accessor :msbuild_path
@@ -16,6 +21,7 @@ module Msbuild
     attr_accessor :certificate_password
     attr_accessor :certificate_thumbprint
     attr_accessor :build_type
+    attr_accessor :msbuild_type
   end
 
   class << self

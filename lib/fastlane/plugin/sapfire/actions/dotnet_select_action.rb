@@ -9,9 +9,11 @@ module Fastlane
     class DotnetSelectAction < Action
       def self.run(params)
         path = (params || []).first.to_s
+        path = File.expand_path(path)
 
-        UI.user_error!("Path to dotnet executable required") if path.empty? || !path.end_with?("dotnet.exe")
         UI.user_error!("File '#{path}' doesn't exist") unless File.exist?(path)
+        UI.user_error!("Path to dotnet executable required") if
+          path.empty? || (!path.end_with?("dotnet") && !path.end_with?("dotnet.exe"))
 
         Actions.lane_context[SharedValues::SF_DOTNET_PATH] = path
 

@@ -2,6 +2,7 @@ require "open3"
 require "fastlane_core/print_table"
 require_relative "module"
 require_relative "../sln_project/module"
+require_relative "../helper/sapfire_helper"
 
 module Msbuild
   class Runner
@@ -9,13 +10,16 @@ module Msbuild
       params = Msbuild.config.params
 
       FastlaneCore::PrintTable.print_values(config: params, title: "Summary for msbuild")
+      UI.user_error!("Can't find MSBuild") unless Fastlane::Helper::SapfireHelper.msbuild_specified?
+      UI.user_error!("Can't find dotnet. You selected MSBuild as a library, so dotnet is required to work with it. ") if
+        Msbuild.config.msbuild_type == Msbuild::MsbuildType::LIBRARY && !Fastlane::Helper::SapfireHelper.dotnet_specified?
 
       params[:jobs] = 1 if params[:jobs].zero?
       prev_cwd = Dir.pwd
       working_directory = File.dirname(File.expand_path(params[:project]))
       msbuild_path = Msbuild.config.msbuild_path
       msbuild_args = get_msbuild_args(params, Msbuild.config.overwritten_props)
-      cmd = "\"#{msbuild_path}\" #{msbuild_args.join(" ")}"
+      cmd = "#{msbuild_path} #{msbuild_args.join(" ")}"
 
       check_configuration_platform(params)
 
@@ -47,15 +51,30 @@ module Msbuild
     def get_msbuild_args(params, overwritten_props)
       args = []
 
-      params[:properties].each do |key, value|
-        unless overwritten_props.include?(key)
-          args.append(get_project_property_string(key, value))
-          next
-        end
+      if params.values.include?(:properties)
+        params[:properties].each do |key, value|
+          unless overwritten_props.include?(key)
+            args.append(get_project_property_string(key, value))
+            next
+          end
 
-        # Remove properties that would be overwritten by this action
-        UI.important("Property #{key} will be ignored. Use `#{overwritten_props[key]}` option instead.")
+          # Remove properties that would be overwritten by this action
+          UI.important("Property #{key} will be ignored. Use `#{overwritten_props[key]}` option instead.")
+        end
       end
+
+      configuration = params[:configuration] if
+        params.values.include?(:configuration) && !params[:configuration].empty?
+
+      platform = params[:platform] if
+        params.values.include?(:platform) && !params[:platform].empty?
+
+      need_restore = ([true].include?(params[:restore]) if params.values.include?(:restore)) || false
+
+      need_clean = ([true].include?(params[:clean]) if params.values.include?(:clean)) || false
+
+      appx_output_path = File.expand_path(params[:appx_output_path]) if
+        params.values.include?(:appx_output_path) && !params[:appx_output_path].empty?
 
       appx_output_path = File.expand_path(params[:appx_output_path]) if
         params.values.include?(:appx_output_path) && !params[:appx_output_path].empty?
@@ -77,8 +96,8 @@ module Msbuild
 
       signing_enabled = !params[:skip_codesigning] if params.values.include?(:skip_codesigning)
 
-      args.append("-p:Configuration=#{params[:configuration]}")
-      args.append("-p:Platform=#{params[:platform]}")
+      args.append("-p:Configuration=\"#{configuration}\"") unless configuration.nil?
+      args.append("-p:Platform=\"#{platform}\"") unless platform.nil?
       args.append("-p:AppxPackageDir=\"#{appx_output_path}\"") unless appx_output_path.nil?
       args.append("-p:AppxBundlePlatforms=\"#{appx_bundle_platforms}\"") unless appx_bundle_platforms.nil?
       args.append("-p:AppxBundle=Always") if Msbuild.config.build_type == Msbuild::BuildType::UWP
@@ -88,17 +107,21 @@ module Msbuild
       args.append("-p:PackageCertificatePassword=#{certificate_password}") unless certificate_password.nil?
       args.append("-p:PackageCertificateThumbprint=#{certificate_thumbprint}") unless certificate_thumbprint.nil?
       args.append("-m#{params[:jobs].positive? ? ":#{params[:jobs]}" : ""}")
-      args.append("-r") if [true].include?(params[:restore]) || Msbuild.config.build_type == Msbuild::BuildType::NUGET
+      args.append("-r") if need_restore || Msbuild.config.build_type == Msbuild::BuildType::NUGET
 
-      args.append("-t:Clean;Build") if [true].include?(params[:clean])
+      args.append("-t:Clean;Build") if need_clean
       args.append("-t:Pack") if Msbuild.config.build_type == Msbuild::BuildType::NUGET
 
       args
     end
 
     def check_configuration_platform(params)
-      configuration = params[:configuration]
-      platform = params[:platform]
+      configuration = params[:configuration] if
+        params.values.include?(:configuration) && !params[:configuration].empty?
+
+      platform = params[:platform] if
+        params.values.include?(:platform) && !params[:platform].empty?
+
       root_block = SlnProject.open(params[:project])
       platforms = root_block.global.solution_configuration_platforms.platforms
 

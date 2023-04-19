@@ -1,19 +1,28 @@
 require "fastlane/action"
+require_relative "../msbuild/module"
 
 module Fastlane
   module Actions
     module SharedValues
       SF_MSBUILD_PATH = :SF_MSBUILD_PATH
+      SF_MSBUILD_TYPE = :SF_MSBUILD_TYPE
     end
 
     class MsbuildSelectAction < Action
       def self.run(params)
         path = (params || []).first.to_s
+        path = File.expand_path(path)
 
-        UI.user_error!("Path to MSBuild executable required") if path.empty? || !path.end_with?("MSBuild.exe")
         UI.user_error!("File '#{path}' doesn't exist") unless File.exist?(path)
+        UI.user_error!("Path to MSBuild executable or library required") if
+          path.empty? || (!path.end_with?("MSBuild.exe") && !path.end_with?("MSBuild.dll"))
 
         Actions.lane_context[SharedValues::SF_MSBUILD_PATH] = path
+        Actions.lane_context[SharedValues::SF_MSBUILD_TYPE] = if path.end_with?("MSBuild.exe")
+                                                                Msbuild::MsbuildType::EXE
+                                                              else
+                                                                Msbuild::MsbuildType::LIBRARY
+                                                              end
 
         UI.message("Setting MSBuild executable to '#{path}' for all next build steps")
       end
