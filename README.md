@@ -78,6 +78,13 @@ Here is the list of all available actions. Read the documentation on each one by
 |----------------------------------------------------------------------------|-----------------------------------------|--------------------:|
 | [update_uwp_signing_settings](docs/actions/update_uwp_signing_settings.md) | Configures UWP package signing settings |             windows |
 
+#### 🔧 Testing
+
+| Argument                                               | Description                                                                 | Supported platforms |
+|--------------------------------------------------------|-----------------------------------------------------------------------------|--------------------:|
+| [app_certification](docs/actions/app_certification.md) | Runs Windows App Certification Kit to ensure your app is safe and efficient |             windows |
+
+
 #### 📦 Releasing
 
 | Argument                                     | Description                                     | Supported platforms |

@@ -36,6 +36,15 @@ module Fastlane
 
         true
       end
+
+      def self.kits_10_location
+        require "win32/registry"
+
+        Win32::Registry::HKEY_LOCAL_MACHINE.open("SOFTWARE\\Wow6432Node\\Microsoft\\Windows Kits\\Installed Roots") do |reg|
+          value = reg["KitsRoot10"]
+          return value.strip
+        end
+      end
     end
   end
 end
