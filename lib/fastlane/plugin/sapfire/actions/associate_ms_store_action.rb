@@ -39,8 +39,13 @@ module Fastlane
                                            .elements["Identity"]
           identity_entry.attributes["Name"] = app_identity
           identity_entry.attributes["Publisher"] = publisher
+
+          properties_entry = appxmanifest_xml.elements["Package"]
+                                             .elements["Properties"]
+          properties_entry.elements["DisplayName"].text = app_names[0] unless app_names.empty?
+          properties_entry.elements["PublisherDisplayName"].text = publisher_display_name
         rescue StandardError => ex
-          UI.user_error!("Can't update Package.Identity attribute `Name` in manifest: #{ex}")
+          UI.user_error!("Can't update app manifest: #{ex}")
         end
 
         save_xml(appxmanifest_xml, manifest_path)
