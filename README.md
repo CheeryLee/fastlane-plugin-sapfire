@@ -91,6 +91,13 @@ Here is the list of all available actions. Read the documentation on each one by
 |----------------------------------------------|-------------------------------------------------|--------------------:|
 | [upload_nuget](docs/actions/upload_nuget.md) | Pushes a package to the server and publishes it |                 all |
 
+#### 🔆 Misc
+
+| Argument                                         | Description                                   | Supported platforms |
+|--------------------------------------------------|-----------------------------------------------|--------------------:|
+| [ms_credentials](docs/actions/ms_credentials.md) | Sets Azure AD credentials for further actions |             windows |
+
+
 ## Working with SLN solution
 In addition this plugin provides a parser module for Microsoft SLN file format.
 
