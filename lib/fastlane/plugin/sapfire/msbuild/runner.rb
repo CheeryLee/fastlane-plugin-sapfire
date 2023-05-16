@@ -15,18 +15,17 @@ module Msbuild
       UI.user_error!("Can't find dotnet. You selected MSBuild as a library, so dotnet is required to work with it. ") if
         Msbuild.config.msbuild_type == Msbuild::MsbuildType::LIBRARY && !Fastlane::Helper::SapfireHelper.dotnet_specified?
 
-      params[:jobs] = 1 if params[:jobs].zero?
       prev_cwd = Dir.pwd
       working_directory = File.dirname(File.expand_path(params[:project]))
+      UI.message("Change working directory to #{working_directory}")
+      Dir.chdir(working_directory)
+
+      params[:jobs] = 1 if params[:jobs].zero?
       msbuild_path = Msbuild.config.msbuild_path
       msbuild_args = get_msbuild_args(params, Msbuild.config.overwritten_props)
       cmd = "#{msbuild_path} #{msbuild_args.join(" ")}"
 
       check_configuration_platform(params)
-
-      UI.message("Change working directory to #{working_directory}")
-      Dir.chdir(working_directory)
-
       UI.command(cmd)
 
       Open3.popen2(cmd) do |_, stdout, wait_thr|
