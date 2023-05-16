@@ -3,6 +3,8 @@ require_relative "module"
 
 module Msbuild
   class Options
+    PACKAGE_FORMATS = %w[.appx .appxbundle .appxupload .msix .msixbundle .msixupload].freeze
+
     def self.available_options
       return @options if @options
 
@@ -51,6 +53,13 @@ module Msbuild
         FastlaneCore::ConfigItem.new(
           key: :appx_output_path,
           description: "Defines the folder to store the generated package artifacts. Relative path is a root folder where project is located",
+          optional: true,
+          default_value: "",
+          type: String
+        ),
+        FastlaneCore::ConfigItem.new(
+          key: :appx_output_name,
+          description: "Defines the name of the resulting package",
           optional: true,
           default_value: "",
           type: String

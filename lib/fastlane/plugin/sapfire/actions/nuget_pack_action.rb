@@ -31,6 +31,7 @@ module Fastlane
         %i[
           restore
           appx_output_path
+          appx_output_name
           appx_bundle_platforms
           build_mode
           skip_codesigning

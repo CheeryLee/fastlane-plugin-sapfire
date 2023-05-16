@@ -1,6 +1,7 @@
 require "open3"
 require "fastlane_core/print_table"
 require_relative "module"
+require_relative "options"
 require_relative "../sln_project/module"
 require_relative "../helper/sapfire_helper"
 
@@ -40,6 +41,8 @@ module Msbuild
         UI.success("MSBuild has ended successfully") if wait_thr.value.success?
       end
 
+      rename_package(params)
+
       UI.message("Change working directory back to #{prev_cwd}")
       Dir.chdir(prev_cwd)
     end
@@ -72,9 +75,6 @@ module Msbuild
       need_restore = ([true].include?(params[:restore]) if params.values.include?(:restore)) || false
 
       need_clean = ([true].include?(params[:clean]) if params.values.include?(:clean)) || false
-
-      appx_output_path = File.expand_path(params[:appx_output_path]) if
-        params.values.include?(:appx_output_path) && !params[:appx_output_path].empty?
 
       appx_output_path = File.expand_path(params[:appx_output_path]) if
         params.values.include?(:appx_output_path) && !params[:appx_output_path].empty?
@@ -140,9 +140,33 @@ module Msbuild
       end
     end
 
+    def rename_package(params)
+      appx_output_name = params[:appx_output_name] if
+        params.values.include?(:appx_output_name) && !params[:appx_output_name].empty?
+
+      return if appx_output_name.nil? || appx_output_name.empty?
+
+      appx_output_path = File.expand_path(params[:appx_output_path]) if
+        params.values.include?(:appx_output_path) && !params[:appx_output_path].empty?
+      appx_output_path = "./" if appx_output_path.nil? || appx_output_path.empty?
+
+      Msbuild::Options::PACKAGE_FORMATS.each do |extension|
+        entries = Dir.entries(appx_output_path).find_all { |x| x.end_with?(extension) }
+        next if entries.nil? || entries.empty?
+
+        old_name = entries[0]
+        new_name = "#{appx_output_name}#{extension}"
+
+        UI.message("Rename #{old_name} to #{new_name}")
+        File.rename(File.join(appx_output_path, old_name), File.join(appx_output_path, new_name))
+      end
+
+    end
+
     public(:run)
     private(:get_project_property_string)
     private(:get_msbuild_args)
     private(:check_configuration_platform)
+    private(:rename_package)
   end
 end

@@ -30,6 +30,7 @@ module Fastlane
       def self.rejected_options
         %i[
           appx_output_path
+          appx_output_name
           appx_bundle_platforms
           build_mode
           skip_codesigning
