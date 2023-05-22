@@ -87,9 +87,10 @@ Here is the list of all available actions. Read the documentation on each one by
 
 #### 📦 Releasing
 
-| Argument                                     | Description                                     | Supported platforms |
-|----------------------------------------------|-------------------------------------------------|--------------------:|
-| [upload_nuget](docs/actions/upload_nuget.md) | Pushes a package to the server and publishes it |                 all |
+| Argument                                           | Description                                     | Supported platforms |
+|----------------------------------------------------|-------------------------------------------------|--------------------:|
+| [upload_ms_store](docs/actions/upload_ms_store.md) | Uploads new binary to Microsoft Partner Center  |             windows |
+| [upload_nuget](docs/actions/upload_nuget.md)       | Pushes a package to the server and publishes it |                 all |
 
 #### 🔆 Misc
 
