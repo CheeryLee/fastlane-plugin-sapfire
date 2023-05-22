@@ -6,7 +6,7 @@
 
 # Sapfire
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/CheeryLee/fastlane-plugin-sapfire?display_name=tag&include_prereleases)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/CheeryLee/fastlane-plugin-sapfire?display_name=tag)
 
 <br/>
 <p align="center">An incredibly simple and fast way to automate building and deployment <b>Visual C++</b>, <b>.NET</b> and <b>UWP</b> apps</p>
@@ -21,15 +21,6 @@ but also can be used independently via command-line interface.
 **NuGet** is a package manager,  primarily used for packaging and distributing software written using the .NET.
 
 **Microsoft Store** is a digital distribution platform for Windows.
-
-## Goals
-> Sapfire is in beta status at the moment. Not all declared features are supported right now. Look at the goals list
-> down below to find info of interest.
-
-- [x] Generic MSBuild support
-- [x] NuGet package building
-- [x] NuGet package uploading to various repositories
-- [ ] Microsoft Store app submission
 
 ## Getting started
 To get started working with plugin, add it to your `fastlane/Pluginfile`:
