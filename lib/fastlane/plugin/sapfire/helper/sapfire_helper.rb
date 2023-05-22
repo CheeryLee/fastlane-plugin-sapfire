@@ -45,6 +45,11 @@ module Fastlane
           return value.strip
         end
       end
+
+      def self.root_plugin_location
+        path = File.join(File.dirname(__dir__), "../../../../")
+        File.expand_path(path)
+      end
     end
   end
 end
