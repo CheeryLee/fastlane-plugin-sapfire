@@ -5,9 +5,19 @@
 </p>
 
 # Sapfire
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/CheeryLee/fastlane-plugin-sapfire?display_name=tag)
-[![Gem Version](https://badge.fury.io/rb/fastlane-plugin-sapfire.svg)](https://rubygems.org/gems/fastlane-plugin-sapfire)
+
+<p align="center">
+<a href="https://opensource.org/licenses/MIT">
+  <img alt="Gem" src="https://img.shields.io/badge/License-MIT-yellow.svg">
+</a>
+<a href="https://github.com/CheeryLee/fastlane-plugin-sapfire/releases">
+  <img alt="Gem" src="https://img.shields.io/github/v/release/CheeryLee/fastlane-plugin-sapfire?display_name=tag">
+</a>
+<a href="https://rubygems.org/gems/fastlane-plugin-sapfire">
+  <img alt="Gem" src="https://badge.fury.io/rb/fastlane-plugin-sapfire.svg">
+</a>
+<img alt="Gem" src="https://img.shields.io/gem/dt/fastlane-plugin-sapfire">
+</p>
 
 <br/>
 <p align="center">An incredibly simple and fast way to automate building and deployment <b>Visual C++</b>, <b>.NET</b> and <b>UWP</b> apps</p>
