@@ -150,16 +150,15 @@ module Msbuild
       appx_output_path = "./" if appx_output_path.nil? || appx_output_path.empty?
 
       Msbuild::Options::PACKAGE_FORMATS.each do |extension|
-        entries = Dir.entries(appx_output_path).find_all { |x| x.end_with?(extension) }
+        entries = Dir.glob("#{appx_output_path}/**/*").find_all { |x| x.end_with?(extension) }
         next if entries.nil? || entries.empty?
 
-        old_name = entries[0]
-        new_name = "#{appx_output_name}#{extension}"
-
-        UI.message("Rename #{old_name} to #{new_name}")
-        File.rename(File.join(appx_output_path, old_name), File.join(appx_output_path, new_name))
+        entries.each do |entry|
+          new_name = File.join(File.dirname(entry), "#{appx_output_name}#{extension}")
+          UI.message("Rename #{entry} to #{new_name}")
+          File.rename(entry, new_name)
+        end
       end
-
     end
 
     public(:run)
