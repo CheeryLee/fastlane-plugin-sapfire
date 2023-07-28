@@ -37,6 +37,16 @@ module Fastlane
         ]
       end
 
+      def self.rejected_output
+        %w[
+          SF_MSBUILD_APPX_OUTPUT_PATH
+          SF_MSBUILD_APPX_OUTPUT_NAME
+          SF_MSBUILD_APPX_PLATFORMS
+          SF_MSBUILD_BUILD_MODE
+          SF_MSBUILD_SKIP_CODESIGNING
+        ]
+      end
+
       def self.category
         :building
       end

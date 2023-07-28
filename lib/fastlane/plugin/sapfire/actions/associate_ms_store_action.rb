@@ -230,10 +230,18 @@ module Fastlane
         [:windows].include?(platform)
       end
 
+      def self.output
+        [
+          ["SF_PROJECT_MANIFEST", "Path to the APPX package manifest"],
+          ["SF_APP_ID", "The Microsoft Store ID of an application"]
+        ]
+      end
+
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
             key: :manifest,
+            env_name: "SF_PROJECT_MANIFEST",
             description: "Path to the APPX package manifest",
             optional: false,
             type: String,
@@ -245,6 +253,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :app_id,
+            env_name: "SF_APP_ID",
             description: "The Microsoft Store ID of an application",
             optional: false,
             type: String,

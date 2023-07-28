@@ -38,10 +38,20 @@ module Fastlane
         true
       end
 
+      def self.output
+        [
+          ["SF_NUGET_API_KEY", "The API key for the server"],
+          ["SF_NUGET_SERVER", "The server URL. NuGet identifies a UNC or local folder source and simply copies the file there instead of pushing it using HTTP"],
+          ["SF_PUSHING_TIMEOUT", "The timeout for pushing to a server in seconds"],
+          ["SF_PACKAGE", "The file path to the package to be uploaded"],
+        ]
+      end
+
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
             key: :api_key,
+            env_name: "SF_NUGET_API_KEY",
             description: "The API key for the server",
             optional: false,
             type: String,
@@ -51,12 +61,14 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :source,
+            env_name: "SF_NUGET_SERVER",
             description: "The server URL. NuGet identifies a UNC or local folder source and simply copies the file there instead of pushing it using HTTP",
             optional: false,
             type: String
           ),
           FastlaneCore::ConfigItem.new(
             key: :timeout,
+            env_name: "SF_PUSHING_TIMEOUT",
             description: "The timeout for pushing to a server in seconds",
             optional: true,
             default_value: 0,
@@ -64,6 +76,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :path,
+            env_name: "SF_PACKAGE",
             description: "The file path to the package to be uploaded",
             optional: false,
             type: String,

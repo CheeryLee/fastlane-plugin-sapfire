@@ -92,10 +92,19 @@ module Fastlane
         [:windows].include?(platform)
       end
 
+      def self.output
+        [
+          ["SF_PUSHING_TIMEOUT", "The timeout for pushing to a server in seconds"],
+          ["SF_APP_ID", "The Microsoft Store ID of an application"],
+          ["SF_PACKAGE", "The file path to the package to be uploaded"]
+        ]
+      end
+
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
             key: :timeout,
+            env_name: "SF_PUSHING_TIMEOUT",
             description: "The timeout for pushing to a server in seconds",
             optional: true,
             default_value: 0,
@@ -103,6 +112,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :app_id,
+            env_name: "SF_APP_ID",
             description: "The Microsoft Store ID of an application",
             optional: false,
             type: String,
@@ -119,6 +129,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :path,
+            env_name: "SF_PACKAGE",
             description: "The file path to the package to be uploaded",
             optional: false,
             type: String,

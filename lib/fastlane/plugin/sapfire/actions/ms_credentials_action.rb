@@ -33,10 +33,21 @@ module Fastlane
         [:windows].include?(platform)
       end
 
+      def self.output
+        [
+          ["SF_MS_USERNAME", "The username of Azure AD account"],
+          ["SF_MS_PASSWORD", "The password of Azure AD account"],
+          ["SF_MS_TENANT_ID", "The unique identifier of the Azure AD instance"],
+          ["SF_MS_CLIENT_ID", "The ID of an application that would be associate to get working with Microsoft account"],
+          ["SF_MS_CLIENT_SECRET", "The unique secret string of an application that can be generated in Microsoft Partner Center"]
+        ]
+      end
+
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
             key: :username,
+            env_name: "SF_MS_USERNAME",
             description: "The username of Azure AD account",
             optional: false,
             type: String,
@@ -46,6 +57,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :password,
+            env_name: "SF_MS_PASSWORD",
             description: "The password of Azure AD account",
             optional: false,
             type: String,
@@ -55,6 +67,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :tenant_id,
+            env_name: "SF_MS_TENANT_ID",
             description: "The unique identifier of the Azure AD instance",
             optional: false,
             type: String,
@@ -64,6 +77,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :client_id,
+            env_name: "SF_MS_CLIENT_ID",
             description: "The ID of an application that would be associate to get working with Microsoft account",
             optional: false,
             type: String,
@@ -73,6 +87,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :client_secret,
+            env_name: "SF_MS_CLIENT_SECRET",
             description: "The unique secret string of an application that can be generated in Microsoft Partner Center",
             optional: false,
             type: String,

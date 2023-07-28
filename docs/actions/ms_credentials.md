@@ -11,13 +11,13 @@ Call this action before any other actions that uses Azure AD API.
 Make sure that your environment is secure enough to work with them and not be at risk of a leak.
 Unfortunately, at this moment there is no any other safer way to get an authorization token.
 
-| Argument        | Description                                                                                  | Default |
-|-----------------|----------------------------------------------------------------------------------------------|---------|
-| `client_id`     | The ID of an application that would be associate to get working with Microsoft account       |         |
-| `client_secret` | The unique secret string of an application that can be generated in Microsoft Partner Center |         |
-| `tenant_id`     | The unique identifier of the Azure AD instance                                               |         |
-| `username`      | The username of Azure AD account                                                             |         |
-| `password`      | The password of Azure AD account                                                             |         |
+| Argument        | Description                                                                                  | Env Var               | Default |
+|-----------------|----------------------------------------------------------------------------------------------|-----------------------|---------|
+| `client_id`     | The ID of an application that would be associate to get working with Microsoft account       | `SF_MS_CLIENT_ID`     |         |
+| `client_secret` | The unique secret string of an application that can be generated in Microsoft Partner Center | `SF_MS_CLIENT_SECRET` |         |
+| `tenant_id`     | The unique identifier of the Azure AD instance                                               | `SF_MS_TENANT_ID`     |         |
+| `username`      | The username of Azure AD account                                                             | `SF_MS_USERNAME`      |         |
+| `password`      | The password of Azure AD account                                                             | `SF_MS_PASSWORD`      |         |
 
 Example:
 

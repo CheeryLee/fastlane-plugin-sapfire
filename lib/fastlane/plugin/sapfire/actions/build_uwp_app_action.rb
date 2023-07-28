@@ -47,6 +47,10 @@ module Fastlane
         nil
       end
 
+      def self.rejected_output
+        nil
+      end
+
       def self.category
         :building
       end

@@ -94,10 +94,17 @@ module Fastlane
         true
       end
 
+      def self.output
+        [
+          ["SF_ENSURE_DOTNET_VERSION", ".NET version to verify that is installed"]
+        ]
+      end
+
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
             key: :version,
+            env_name: "SF_ENSURE_DOTNET_VERSION",
             description: ".NET version to verify that is installed",
             optional: false,
             type: String,

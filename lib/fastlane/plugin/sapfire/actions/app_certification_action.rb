@@ -36,10 +36,18 @@ module Fastlane
         [:windows].include?(platform)
       end
 
+      def self.output
+        [
+          ["SF_PACKAGE", "The full path to a UWP package"],
+          ["SF_WACK_OUTPUT_PATH", "The path where to save report output XML-file"]
+        ]
+      end
+
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
             key: :appx_package_path,
+            env_name: "SF_PACKAGE",
             description: "The full path to a UWP package",
             optional: false,
             type: String,
@@ -51,6 +59,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :output_path,
+            env_name: "SF_WACK_OUTPUT_PATH",
             description: "The path where to save report output XML-file",
             optional: false,
             type: String

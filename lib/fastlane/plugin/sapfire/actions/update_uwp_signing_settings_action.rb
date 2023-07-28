@@ -35,10 +35,18 @@ module Fastlane
         [:windows].include?(platform)
       end
 
+      def self.output
+        [
+          ["SF_UWP_CERTIFICATE_PATH", "Path to the certificate to use"],
+          ["SF_UWP_CERTIFICATE_PASSWORD", "The password for the private key in the certificate"]
+        ]
+      end
+
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(
             key: :certificate,
+            env_name: "SF_UWP_CERTIFICATE_PATH",
             description: "Path to the certificate to use",
             optional: false,
             type: String,
@@ -50,6 +58,7 @@ module Fastlane
           ),
           FastlaneCore::ConfigItem.new(
             key: :password,
+            env_name: "SF_UWP_CERTIFICATE_PASSWORD",
             description: "The password for the private key in the certificate",
             optional: true,
             default_value: "",

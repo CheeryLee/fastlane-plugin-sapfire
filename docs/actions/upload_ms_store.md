@@ -12,12 +12,12 @@ the first time. Microsoft has deprecated some API objects and hasn't given a rep
 the action successfully ends, but returns a yellow colored warning message and notifies that you must make your own decision about the
 problematic aspects.  
 
-| Argument                            | Description                                                                                        | Default |
-|-------------------------------------|----------------------------------------------------------------------------------------------------|--------:|
-| `app_id`                            | The Microsoft Store ID of an application                                                           |         |
-| `path`                              | The file path to the package to be uploaded                                                        |         |
-| `timeout`                           | The timeout for pushing to a server in seconds                                                     |       0 |
-| `skip_waiting_for_build_processing` | If set to true, the action will only commit the submission and skip the remaining build validation |   false |
+| Argument                            | Description                                                                                        | Env Var              | Default |
+|-------------------------------------|----------------------------------------------------------------------------------------------------|----------------------|--------:|
+| `app_id`                            | The Microsoft Store ID of an application                                                           | `SF_APP_ID`          |         |
+| `path`                              | The file path to the package to be uploaded                                                        | `SF_PACKAGE`         |         |
+| `timeout`                           | The timeout for pushing to a server in seconds                                                     | `SF_PUSHING_TIMEOUT` |       0 |
+| `skip_waiting_for_build_processing` | If set to true, the action will only commit the submission and skip the remaining build validation |                      |   false |
 
 Example:
 

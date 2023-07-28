@@ -37,6 +37,15 @@ module Fastlane
           rejected_options_array.include?(option.key)
         end
       end
+
+      def self.output
+        rejected_output_array = rejected_output
+        return Msbuild::Options.available_output if rejected_output_array.nil?
+
+        Msbuild::Options.available_output.reject do |output|
+          rejected_output_array.include?(output[0])
+        end
+      end
     end
   end
 end
