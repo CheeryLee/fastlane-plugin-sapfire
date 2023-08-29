@@ -46,7 +46,6 @@ module Fastlane
            [true].include?(params[:skip_waiting_for_build_processing])
           UI.success("Submission passed, but build processing were skipped. Check the Dev Center page.")
           return
-
         end
 
         status = false
@@ -181,7 +180,14 @@ module Fastlane
           "minimumSystemRam": "None"
         }
 
-        submission_obj[key] = [] if submission_obj[key].empty?
+        if submission_obj[key].empty?
+          submission_obj[key] = []
+        else
+          submission_obj[key].each do |existing_package|
+            existing_package[:fileStatus] = "PendingDelete"
+          end
+        end
+
         submission_obj[key].append(package)
         submission_obj
       end
