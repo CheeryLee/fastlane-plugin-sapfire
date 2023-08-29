@@ -156,8 +156,8 @@ module Fastlane
       end
 
       def self.create_blob_zip(package_path)
-        File.delete(File.join(File.dirname(package_path), "blob.zip"))
         zip_path = File.join(File.dirname(package_path), "blob.zip")
+        File.delete(zip_path) if File.exist?(zip_path)
 
         Zip::File.open(zip_path, create: true) do |file|
           file.add(File.basename(package_path), package_path)
