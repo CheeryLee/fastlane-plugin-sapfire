@@ -182,6 +182,26 @@ module Fastlane
         check_app_id(app_id)
         check_submission_id(submission_id)
 
+        response = get_submission_status_internal(app_id, submission_id, auth_token, timeout)
+
+        # Sometimes MS can return internal server error code (500) that is not directly related to uploading process.
+        # Once it happens, retry 3 times until we'll get a success response.
+        if response[:status] == 500
+          server_error_500_retry_counter = 0
+
+          until server_error_500_retry_counter < 2
+            server_error_500_retry_counter += 1
+            response = get_submission_status_internal(app_id, submission_id, auth_token, timeout)
+            break if response.nil? || response[:status] == 200
+          end
+        end
+
+        return response[:data] if !response.nil? && response[:status] == 200
+
+        UI.user_error!("Submission status obtaining request returned the error.\nCode: #{response[:status]}")
+      end
+
+      def self.get_submission_status_internal(app_id, submission_id, auth_token, timeout = 0)
         connection = Faraday.new(HOST)
         response = connection.get("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}/status") do |req|
           req.headers = build_headers(auth_token)
@@ -189,12 +209,15 @@ module Fastlane
         end
 
         begin
-          data = JSON.parse(response.body)
-          return data if response.status == 200
-
-          UI.user_error!("Request returned the error.\nCode: #{response.status}")
+          UI.error("Request returned the error.\nCode: #{response.status}") if response.status != 200
+          data = response.status == 200 ? JSON.parse(response.body) : nil
+          {
+            "data": data,
+            "status": response.status
+          }
         rescue StandardError => ex
           UI.user_error!("Submission status obtaining process failed: #{ex}")
+          nil
         end
       end
 
@@ -280,6 +303,7 @@ module Fastlane
       private_class_method(:parse_upload_url)
       private_class_method(:check_app_id)
       private_class_method(:check_submission_id)
+      private_class_method(:get_submission_status_internal)
 
       private_constant(:HOST)
       private_constant(:API_VERSION)
