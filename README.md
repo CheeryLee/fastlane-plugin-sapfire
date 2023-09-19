@@ -36,7 +36,7 @@ but also can be used independently via command-line interface.
 ## Getting started
 To get started working with plugin, add it to your `fastlane/Pluginfile`:
 ```ruby
-gem "fastlane-plugin-sapfire", git: "https://github.com/fastlane/fastlane-plugin-sapfire" 
+gem "fastlane-plugin-sapfire", git: "https://github.com/fastlane/fastlane-plugin-sapfire.git" 
 ```
 
 ## Usage
