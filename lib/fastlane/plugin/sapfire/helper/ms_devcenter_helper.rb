@@ -53,19 +53,24 @@ module Fastlane
         url_data = parse_upload_url(url)
         url_data[:query]["comp"] = "block"
         url_data[:query]["blockid"] = id
-
         connection = Faraday.new(url_data[:host])
-        response = connection.put(url_data[:path]) do |req|
-          req.headers = headers
-          req.params = url_data[:query]
-          req.body = bytes
-          req.options.timeout = timeout if timeout.positive?
+
+        begin
+          response = connection.put(url_data[:path]) do |req|
+            req.headers = headers
+            req.params = url_data[:query]
+            req.body = bytes
+            req.options.timeout = timeout if timeout.positive?
+          end
+
+          return true if response.status == 201
+
+          error = response.body.to_s
+          UI.error("Upload request failed.\nCode: #{response.status}\nError: #{error}")
+        rescue StandardError => ex
+          UI.error("Upload request failed: #{ex}")
         end
 
-        return true if response.status == 201
-
-        error = response.body.to_s
-        UI.error("Upload request failed.\nCode: #{response.status}\nError: #{error}")
         false
       end
 
@@ -81,18 +86,23 @@ module Fastlane
 
         url_data = parse_upload_url(url)
         url_data[:query]["comp"] = "blocklist"
-
         connection = Faraday.new(url_data[:host])
-        response = connection.put(url_data[:path]) do |req|
-          req.params = url_data[:query]
-          req.body = document.to_s
-          req.options.timeout = timeout if timeout.positive?
+
+        begin
+          response = connection.put(url_data[:path]) do |req|
+            req.params = url_data[:query]
+            req.body = document.to_s
+            req.options.timeout = timeout if timeout.positive?
+          end
+
+          return true if response.status == 201
+
+          error = response.body.to_s
+          UI.error("Upload block list request failed.\nCode: #{response.status}\nError: #{error}")
+        rescue StandardError => ex
+          UI.error("Upload block list request failed: #{ex}")
         end
 
-        return true if response.status == 201
-
-        error = response.body.to_s
-        UI.error("Upload block list request failed.\nCode: #{response.status}\nError: #{error}")
         false
       end
 
@@ -100,16 +110,17 @@ module Fastlane
         check_app_id(app_id)
 
         connection = Faraday.new(HOST)
-        response = connection.get("/#{API_VERSION}/#{API_ROOT}/#{app_id}") do |req|
-          req.headers = build_headers(auth_token)
-          req.options.timeout = timeout if timeout.positive?
-        end
 
         begin
+          response = connection.get("/#{API_VERSION}/#{API_ROOT}/#{app_id}") do |req|
+            req.headers = build_headers(auth_token)
+            req.options.timeout = timeout if timeout.positive?
+          end
           data = JSON.parse(response.body)
+
           return data if response.status == 200
 
-          UI.user_error!("Request returned the error.\nCode: #{response.status}")
+          UI.user_error!("Getting app request returned the error.\nCode: #{response.status}")
         rescue StandardError => ex
           UI.user_error!("Getting app info process failed: #{ex}")
         end
@@ -125,19 +136,20 @@ module Fastlane
         end
 
         connection = Faraday.new(HOST)
-        response = connection.post("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions") do |req|
-          req.headers = build_headers(auth_token)
-          req.options.timeout = timeout if timeout.positive?
-        end
 
         begin
+          response = connection.post("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions") do |req|
+            req.headers = build_headers(auth_token)
+            req.options.timeout = timeout if timeout.positive?
+          end
           data = JSON.parse(response.body)
+
           return data if response.status == 201
 
           code = data["code"]
           message = data["message"]
 
-          UI.user_error!("Request returned the error.\nCode: #{response.status} #{code}.\nDescription: #{message}")
+          UI.user_error!("Creating submission request returned the error.\nCode: #{response.status} #{code}.\nDescription: #{message}")
         rescue StandardError => ex
           UI.user_error!("Creating submission process failed: #{ex}")
         end
@@ -149,17 +161,18 @@ module Fastlane
 
         submission_id = submission_obj["id"]
         connection = Faraday.new(HOST)
-        response = connection.put("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}") do |req|
-          req.headers = build_headers(auth_token)
-          req.body = submission_obj.to_json
-          req.options.timeout = timeout if timeout.positive?
-        end
 
         begin
+          response = connection.put("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}") do |req|
+            req.headers = build_headers(auth_token)
+            req.body = submission_obj.to_json
+            req.options.timeout = timeout if timeout.positive?
+          end
           data = JSON.parse(response.body)
+
           return data if response.status == 200
 
-          UI.user_error!("Request returned the error.\nCode: #{response.status}")
+          UI.user_error!("Updating submission request returned the error.\nCode: #{response.status}")
         rescue StandardError => ex
           UI.user_error!("Updating submission process failed: #{ex}")
         end
@@ -170,12 +183,17 @@ module Fastlane
         check_submission_id(submission_id)
 
         connection = Faraday.new(HOST)
-        response = connection.post("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}/commit") do |req|
-          req.headers = build_headers(auth_token)
-          req.options.timeout = timeout if timeout.positive?
-        end
 
-        UI.user_error!("Committing submission request returned the error.\nCode: #{response.status}") unless response.status == 202
+        begin
+          response = connection.post("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}/commit") do |req|
+            req.headers = build_headers(auth_token)
+            req.options.timeout = timeout if timeout.positive?
+          end
+
+          UI.user_error!("Committing submission request returned the error.\nCode: #{response.status}") unless response.status == 202
+        rescue StandardError => ex
+          UI.user_error!("Committing submission process failed: #{ex}")
+        end
       end
 
       def self.get_submission_status(app_id, submission_id, auth_token, timeout = 0)
@@ -203,13 +221,14 @@ module Fastlane
 
       def self.get_submission_status_internal(app_id, submission_id, auth_token, timeout = 0)
         connection = Faraday.new(HOST)
-        response = connection.get("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}/status") do |req|
-          req.headers = build_headers(auth_token)
-          req.options.timeout = timeout if timeout.positive?
-        end
 
         begin
-          UI.error("Request returned the error.\nCode: #{response.status}") if response.status != 200
+          response = connection.get("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}/status") do |req|
+            req.headers = build_headers(auth_token)
+            req.options.timeout = timeout if timeout.positive?
+          end
+
+          UI.error("Submission status obtaining request returned the error.\nCode: #{response.status}") if response.status != 200
           data = response.status == 200 ? JSON.parse(response.body) : nil
           {
             "data": data,
@@ -217,7 +236,6 @@ module Fastlane
           }
         rescue StandardError => ex
           UI.user_error!("Submission status obtaining process failed: #{ex}")
-          nil
         end
       end
 
@@ -231,22 +249,22 @@ module Fastlane
         headers = {
           "Content-Type": "application/x-www-form-urlencoded"
         }.merge(REQUEST_HEADERS)
-
         connection = Faraday.new("https://login.microsoftonline.com")
-        response = connection.post("/#{tenant_id}/oauth2/token") do |req|
-          req.headers = headers
-          req.body = body
-          req.options.timeout = timeout if timeout.positive?
-        end
 
         begin
+          response = connection.post("/#{tenant_id}/oauth2/token") do |req|
+            req.headers = headers
+            req.body = body
+            req.options.timeout = timeout if timeout.positive?
+          end
           data = JSON.parse(response.body)
+
           return data["access_token"] if response.status == 200
 
           error = data["error"]
           error_description = data["error_description"]
 
-          UI.user_error!("Request returned the error.\nCode: #{error}.\nDescription: #{error_description}")
+          UI.user_error!("Authorization request returned the error.\nCode: #{error}.\nDescription: #{error_description}")
         rescue StandardError => ex
           UI.user_error!("Authorization failed: #{ex}")
         end

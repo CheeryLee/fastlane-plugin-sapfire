@@ -113,13 +113,14 @@ module Fastlane
         https = Net::HTTP.new(uri.host, uri.port)
         https.use_ssl = true
         request = Net::HTTP::Get.new(uri, headers)
-        response = https.request(request)
 
         begin
-          data = JSON.parse(response.body)
+          response = https.request(request)
 
           if response.code == "200"
+            data = JSON.parse(response.body)
             UI.message("Developer info was obtained")
+
             return {
               display_name: data["PublisherDisplayName"],
               publisher: data["Publisher"]
@@ -149,12 +150,12 @@ module Fastlane
         https = Net::HTTP.new(uri.host, uri.port)
         https.use_ssl = true
         request = Net::HTTP::Get.new(uri, headers)
-        response = https.request(request)
 
         begin
-          data = JSON.parse(response.body)
+          response = https.request(request)
 
           if response.code == "200"
+            data = JSON.parse(response.body)
             UI.message("Application info was obtained")
 
             product = data["Products"].find { |x| x["LandingUrl"].include?(app_id) }
@@ -199,9 +200,9 @@ module Fastlane
         https.use_ssl = true
         request = Net::HTTP::Post.new(uri, headers)
         request_body = URI.encode_www_form(body)
-        response = https.request(request, request_body)
 
         begin
+          response = https.request(request, request_body)
           data = JSON.parse(response.body)
 
           if response.code == "200"
