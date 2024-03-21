@@ -6,6 +6,9 @@ require "fastlane/action"
 module Fastlane
   module Actions
     class AssociateMsStoreAction < Action
+      @token = ""
+      @vsapi_location = ""
+
       XML_NAME = "Package.StoreAssociation.xml".freeze
 
       def self.run(params)
@@ -14,9 +17,10 @@ module Fastlane
         begin
           UI.message("Creating #{XML_NAME}...")
 
-          token = acquire_authorization_token
-          developer_info = get_developer_info(token)
-          app_info = get_app_info(token, params[:app_id])
+          @token = acquire_authorization_token
+          @vsapi_location = get_vsapi_location
+          developer_info = get_developer_info
+          app_info = get_app_info(params[:app_id])
           create_xml(params[:manifest], developer_info, app_info)
 
           UI.message("#{XML_NAME} successfully created")
@@ -96,11 +100,11 @@ module Fastlane
         file.close
       end
 
-      def self.get_developer_info(token)
+      def self.get_developer_info()
         UI.message("Obtaining developer info ...")
 
         headers = {
-          "Authorization": "Bearer #{token}",
+          "Authorization": "Bearer #{@token}",
           "Accept": "application/json",
           "MS-Contract-Version": "1"
         }
@@ -108,7 +112,7 @@ module Fastlane
           setvar: "fltaad:1"
         }
 
-        uri = URI("https://developer.microsoft.com/vsapi/developer")
+        uri = URI("#{@vsapi_location}/developer")
         uri.query = URI.encode_www_form(query)
         https = Net::HTTP.new(uri.host, uri.port)
         https.use_ssl = true
@@ -133,11 +137,11 @@ module Fastlane
         end
       end
 
-      def self.get_app_info(token, app_id)
+      def self.get_app_info(app_id)
         UI.message("Obtaining application info ...")
 
         headers = {
-          "Authorization": "Bearer #{token}",
+          "Authorization": "Bearer #{@token}",
           "Accept": "application/json",
           "MS-Contract-Version": "1"
         }
@@ -145,7 +149,7 @@ module Fastlane
           setvar: "fltaad:1"
         }
 
-        uri = URI("https://developer.microsoft.com/vsapi/applications")
+        uri = URI("#{@vsapi_location}/applications")
         uri.query = URI.encode_www_form(query)
         https = Net::HTTP.new(uri.host, uri.port)
         https.use_ssl = true
@@ -185,7 +189,7 @@ module Fastlane
           client_secret: client_secret,
           client_info: 1,
           grant_type: "password",
-          scope: "https://management.azure.com/.default offline_access openid profile",
+          scope: "https://graph.windows.net/.default offline_access openid profile",
           username: username,
           password: password
         }
@@ -216,6 +220,35 @@ module Fastlane
           UI.user_error!("Request returned the error.\nCode: #{error}.\nDescription: #{error_description}")
         rescue StandardError => ex
           UI.user_error!("Authorization failed: #{ex}")
+        end
+      end
+
+      def self.get_vsapi_location()
+        query = {
+          LinkId: "875315" # VS API constant
+        }
+
+        uri = URI("https://go.microsoft.com/fwlink")
+        uri.query = URI.encode_www_form(query)
+        https = Net::HTTP.new(uri.host, uri.port)
+        https.use_ssl = true
+        request = Net::HTTP::Get.new(uri)
+
+        begin
+          response = https.request(request)
+
+          if response.code == "302"
+            throw "" unless response.headers.include?("Location")
+
+            location = response.headers["Location"]
+            UI.message("VS API endpoint: #{location}")
+
+            return location
+          end
+
+          UI.user_error!("Request returned the error: #{response.code}")
+        rescue StandardError => ex
+          UI.user_error!("Failed to get VS API endpoint location: #{ex}")
         end
       end
 
