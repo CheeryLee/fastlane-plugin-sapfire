@@ -34,7 +34,11 @@ but also can be used independently via command-line interface.
 **Microsoft Store** is a digital distribution platform for Windows.
 
 ## Getting started
-To get started working with plugin, add it to your `fastlane/Pluginfile`:
+To get started working with plugin, add it to your project by running:
+```shell
+fastlane add_plugin sapfire
+```
+Or, if you want to pick the latest commit from the repository, add this to `fastlane/Pluginfile`:
 ```ruby
 gem "fastlane-plugin-sapfire", git: "https://github.com/fastlane/fastlane-plugin-sapfire.git" 
 ```
