@@ -7,7 +7,8 @@ module Fastlane
   module Actions
     class AssociateMsStoreAction < Action
       @token = ""
-      @vsapi_location = ""
+      @vsapi_host = ""
+      @vsapi_endpoint = ""
 
       XML_NAME = "Package.StoreAssociation.xml".freeze
 
@@ -17,11 +18,11 @@ module Fastlane
         begin
           UI.message("Creating #{XML_NAME}...")
 
-          @token = acquire_authorization_token
-          @vsapi_location = get_vsapi_location
-          developer_info = get_developer_info
-          app_info = get_app_info(params[:app_id])
-          create_xml(params[:manifest], developer_info, app_info)
+          acquire_authorization_token
+          acquire_vsapi_location
+          ms_developer_info = developer_info
+          ms_app_info = app_info(params[:app_id])
+          create_xml(params[:manifest], ms_developer_info, ms_app_info)
 
           UI.message("#{XML_NAME} successfully created")
         rescue StandardError => ex
@@ -30,50 +31,46 @@ module Fastlane
       end
 
       def self.create_xml(manifest_path, developer_info, app_info)
-        app_identity = app_info[:identity]
-        app_names = app_info[:names]
-        publisher = developer_info[:publisher]
-        publisher_display_name = developer_info[:display_name]
         appxmanifest_xml = get_appxmanifest_xml(manifest_path)
 
-        UI.message("Set identity name: #{app_identity}")
+        UI.message("Set identity name: #{app_info.identity}")
 
         begin
           identity_entry = appxmanifest_xml.elements["Package"]
                                            .elements["Identity"]
-          identity_entry.attributes["Name"] = app_identity
-          identity_entry.attributes["Publisher"] = publisher
+          identity_entry.attributes["Name"] = app_info.identity
+          identity_entry.attributes["Publisher"] = developer_info.publisher
 
           properties_entry = appxmanifest_xml.elements["Package"]
                                              .elements["Properties"]
-          properties_entry.elements["DisplayName"].text = app_names[0] unless app_names.empty?
-          properties_entry.elements["PublisherDisplayName"].text = publisher_display_name
+          properties_entry.elements["DisplayName"].text = app_info.names[0] unless app_info.names.empty?
+          properties_entry.elements["PublisherDisplayName"].text = developer_info.display_name
         rescue StandardError => ex
           UI.user_error!("Can't update app manifest: #{ex}")
         end
 
         save_xml(appxmanifest_xml, manifest_path)
 
-        UI.message("Set publisher data: #{publisher}")
-        UI.message("Set publisher display name: #{publisher_display_name}")
+        UI.message("Set publisher data: #{developer_info.publisher}")
+        UI.message("Set publisher display name: #{developer_info.display_name}")
 
         document = REXML::Document.new
         document.xml_decl.version = "1.0"
         document.xml_decl.encoding = "utf-8"
-
-        store_association = document.add_element("StoreAssociation", {
+        xmlns_args = {
           "xmlns" => "http://schemas.microsoft.com/appx/2010/storeassociation"
-        })
-        store_association.add_element("Publisher").text = publisher
-        store_association.add_element("PublisherDisplayName").text = publisher_display_name
+        }
+        store_association = document.add_element("StoreAssociation", xmlns_args)
+        store_association.add_element("Publisher").text = developer_info.publisher
+        store_association.add_element("PublisherDisplayName").text = developer_info.display_name
         store_association.add_element("DeveloperAccountType").text = "WSA"
         store_association.add_element("GeneratePackageHash").text = "http://www.w3.org/2001/04/xmlenc#sha256"
 
         product_reserved_info = store_association.add_element("ProductReservedInfo")
-        product_reserved_info.add_element("MainPackageIdentityName").text = app_identity
+        product_reserved_info.add_element("MainPackageIdentityName").text = app_info.identity
 
         reserved_names = product_reserved_info.add_element("ReservedNames")
-        app_names.each do |x|
+        app_info.names.each do |x|
           reserved_names.add_element("ReservedName").text = x
         end
 
@@ -100,7 +97,7 @@ module Fastlane
         file.close
       end
 
-      def self.get_developer_info()
+      def self.developer_info
         UI.message("Obtaining developer info ...")
 
         headers = {
@@ -111,33 +108,27 @@ module Fastlane
         query = {
           setvar: "fltaad:1"
         }
-
-        uri = URI("#{@vsapi_location}/developer")
-        uri.query = URI.encode_www_form(query)
-        https = Net::HTTP.new(uri.host, uri.port)
-        https.use_ssl = true
-        request = Net::HTTP::Get.new(uri, headers)
+        connection = Faraday.new(@vsapi_host)
 
         begin
-          response = https.request(request)
+          response = connection.get("#{@vsapi_endpoint}/developer", query, headers)
 
-          if response.code == "200"
+          if response.status == 200
             data = JSON.parse(response.body)
+            developer_info = DeveloperInfo.new(data["PublisherDisplayName"], data["Publisher"])
+
             UI.message("Developer info was obtained")
 
-            return {
-              display_name: data["PublisherDisplayName"],
-              publisher: data["Publisher"]
-            }
+            return developer_info
           end
 
-          UI.user_error!("Request returned the error: #{response.code}")
+          UI.user_error!("Request returned the error: #{response.status}")
         rescue StandardError => ex
           UI.user_error!("Developer info request failed: #{ex}")
         end
       end
 
-      def self.get_app_info(app_id)
+      def self.app_info(app_id)
         UI.message("Obtaining application info ...")
 
         headers = {
@@ -148,25 +139,19 @@ module Fastlane
         query = {
           setvar: "fltaad:1"
         }
-
-        uri = URI("#{@vsapi_location}/applications")
-        uri.query = URI.encode_www_form(query)
-        https = Net::HTTP.new(uri.host, uri.port)
-        https.use_ssl = true
-        request = Net::HTTP::Get.new(uri, headers)
+        connection = Faraday.new(@vsapi_host)
 
         begin
-          response = https.request(request)
+          response = connection.get("#{@vsapi_endpoint}/applications", query, headers)
 
-          if response.code == "200"
+          if response.status == 200
             data = JSON.parse(response.body)
+            product = data["Products"].find { |x| x["LandingUrl"].include?(app_id) }
+            app_info = AppInfo.new(product["MainPackageIdentityName"], product["ReservedNames"])
+
             UI.message("Application info was obtained")
 
-            product = data["Products"].find { |x| x["LandingUrl"].include?(app_id) }
-            return {
-              identity: product["MainPackageIdentityName"],
-              names: product["ReservedNames"]
-            }
+            return app_info
           end
 
           UI.user_error!("Request returned the error: #{response.code}")
@@ -198,20 +183,18 @@ module Fastlane
           "x-client-sku": "fastlane-sapfire-plugin",
           "Accept": "application/json"
         }
-
-        uri = URI("https://login.microsoftonline.com/#{tenant_id}/oauth2/v2.0/token")
-        https = Net::HTTP.new(uri.host, uri.port)
-        https.use_ssl = true
-        request = Net::HTTP::Post.new(uri, headers)
+        connection = Faraday.new("https://login.microsoftonline.com")
         request_body = URI.encode_www_form(body)
 
         begin
-          response = https.request(request, request_body)
+          response = connection.post("/#{tenant_id}/oauth2/v2.0/token", request_body, headers)
           data = JSON.parse(response.body)
 
-          if response.code == "200"
+          if response.status == 200
+            @token = data["access_token"]
             UI.message("Authorization token was obtained")
-            return data["access_token"]
+
+            return
           end
 
           error = data["error"]
@@ -223,30 +206,29 @@ module Fastlane
         end
       end
 
-      def self.get_vsapi_location()
+      def self.acquire_vsapi_location
         query = {
           LinkId: "875315" # VS API constant
         }
-
-        uri = URI("https://go.microsoft.com/fwlink")
-        uri.query = URI.encode_www_form(query)
-        https = Net::HTTP.new(uri.host, uri.port)
-        https.use_ssl = true
-        request = Net::HTTP::Get.new(uri)
+        connection = Faraday.new("https://go.microsoft.com")
 
         begin
-          response = https.request(request)
+          response = connection.get("/fwlink", query)
 
-          if response.code == "302"
-            throw "" unless response.headers.include?("Location")
+          if response.status == 302
+            raise "'Location' header isn't presented" unless response.headers.include?("Location")
 
             location = response.headers["Location"]
+            uri = URI(location)
+            @vsapi_host = "#{uri.scheme}://#{uri.host}"
+            @vsapi_endpoint = uri.path
+
             UI.message("VS API endpoint: #{location}")
 
-            return location
+            return
           end
 
-          UI.user_error!("Request returned the error: #{response.code}")
+          UI.user_error!("Request returned the error: #{response.status}")
         rescue StandardError => ex
           UI.user_error!("Failed to get VS API endpoint location: #{ex}")
         end
@@ -300,6 +282,24 @@ module Fastlane
 
       def self.category
         :project
+      end
+    end
+
+    class DeveloperInfo
+      attr_reader :display_name, :publisher
+
+      def initialize(display_name, publisher)
+        @display_name = display_name
+        @publisher = publisher
+      end
+    end
+
+    class AppInfo
+      attr_reader :identity, :names
+
+      def initialize(identity, names)
+        @identity = identity
+        @names = names
       end
     end
   end
