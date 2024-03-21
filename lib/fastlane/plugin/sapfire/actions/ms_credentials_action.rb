@@ -1,22 +1,19 @@
 require "fastlane/action"
+require_relative "../helper/ms_credentials"
 
 module Fastlane
   module Actions
     module SharedValues
-      SF_MS_USERNAME = :SF_MS_USERNAME
-      SF_MS_PASSWORD = :SF_MS_PASSWORD
-      SF_MS_TENANT_ID = :SF_MS_TENANT_ID
-      SF_MS_CLIENT_ID = :SF_MS_CLIENT_ID
-      SF_MS_CLIENT_SECRET = :SF_MS_CLIENT_SECRET
+      SF_MS_CREDENTIALS = :SF_MS_CREDENTIALS
     end
 
     class MsCredentialsAction < Action
       def self.run(params)
-        Actions.lane_context[SharedValues::SF_MS_USERNAME] = params[:username]
-        Actions.lane_context[SharedValues::SF_MS_PASSWORD] = params[:password]
-        Actions.lane_context[SharedValues::SF_MS_TENANT_ID] = params[:tenant_id]
-        Actions.lane_context[SharedValues::SF_MS_CLIENT_ID] = params[:client_id]
-        Actions.lane_context[SharedValues::SF_MS_CLIENT_SECRET] = params[:client_secret]
+        Helper.ms_credentials.username = params[:username]
+        Helper.ms_credentials.password = params[:password]
+        Helper.ms_credentials.tenant_id = params[:tenant_id]
+        Helper.ms_credentials.client_id = params[:client_id]
+        Helper.ms_credentials.client_secret = params[:client_secret]
 
         UI.success("Credentials for Azure AD account is successfully saved for further actions")
       end

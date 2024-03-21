@@ -2,6 +2,7 @@ require "uri"
 require "net/http"
 require "json"
 require "fastlane/action"
+require_relative "../helper/ms_credentials"
 
 module Fastlane
   module Actions
@@ -163,23 +164,18 @@ module Fastlane
       def self.acquire_authorization_token
         UI.message("Acquiring authorization token ...")
 
-        username = Actions.lane_context[SharedValues::SF_MS_USERNAME]
-        password = Actions.lane_context[SharedValues::SF_MS_PASSWORD]
-        tenant_id = Actions.lane_context[SharedValues::SF_MS_TENANT_ID]
-        client_id = Actions.lane_context[SharedValues::SF_MS_CLIENT_ID]
-        client_secret = Actions.lane_context[SharedValues::SF_MS_CLIENT_SECRET]
-
+        ms_credentials = Helper.ms_credentials
         body = {
-          client_id: client_id,
-          client_secret: client_secret,
+          client_id: ms_credentials.client_id,
+          client_secret: ms_credentials.client_secret,
           client_info: 1,
           grant_type: "password",
           scope: "https://graph.windows.net/.default offline_access openid profile",
-          username: username,
-          password: password
+          username: ms_credentials.username,
+          password: ms_credentials.password
         }
         headers = {
-          "x-anchormailbox": "upn:#{username}",
+          "x-anchormailbox": "upn:#{ms_credentials.username}",
           "x-client-sku": "fastlane-sapfire-plugin",
           "Accept": "application/json"
         }
@@ -187,7 +183,7 @@ module Fastlane
         request_body = URI.encode_www_form(body)
 
         begin
-          response = connection.post("/#{tenant_id}/oauth2/v2.0/token", request_body, headers)
+          response = connection.post("/#{ms_credentials.tenant_id}/oauth2/v2.0/token", request_body, headers)
           data = JSON.parse(response.body)
 
           if response.status == 200

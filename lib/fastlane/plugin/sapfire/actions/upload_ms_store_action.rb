@@ -1,4 +1,5 @@
 require "fastlane/action"
+require_relative "../helper/ms_credentials"
 require_relative "../helper/ms_devcenter_helper"
 require_relative "../msbuild/options"
 
@@ -8,15 +9,16 @@ module Fastlane
       DEFAULT_TIMEOUT = 300
 
       def self.run(params)
-        tenant_id = Actions.lane_context[SharedValues::SF_MS_TENANT_ID]
-        client_id = Actions.lane_context[SharedValues::SF_MS_CLIENT_ID]
-        client_secret = Actions.lane_context[SharedValues::SF_MS_CLIENT_SECRET]
+        ms_credentials = Helper.ms_credentials
         app_id = params[:app_id]
         path = params[:path]
         timeout = params.values.include?(:timeout) && params[:timeout].positive? ? params[:timeout] : DEFAULT_TIMEOUT
 
         UI.message("Acquiring authorization token for DevCenter ...")
-        auth_token = Helper::MsDevCenterHelper.acquire_authorization_token(tenant_id, client_id, client_secret, timeout)
+        auth_token = Helper::MsDevCenterHelper.acquire_authorization_token(ms_credentials.tenant_id,
+                                                                           ms_credentials.client_id,
+                                                                           ms_credentials.client_secret,
+                                                                           timeout)
         UI.message("Authorization token was obtained")
 
         UI.message("Creating submission for app #{app_id} ...")
