@@ -186,7 +186,7 @@ module Fastlane
           submission_obj[key] = []
         else
           submission_obj[key].each do |existing_package|
-            existing_package[:fileStatus] = "PendingDelete"
+            existing_package["fileStatus"] = "PendingDelete"
           end
         end
 
