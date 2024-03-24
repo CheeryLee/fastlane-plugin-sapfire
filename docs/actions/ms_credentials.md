@@ -5,11 +5,11 @@ Sets Azure AD credentials for further actions. Works only on `windows` platform.
 Username should be used from Azure account, not from your Microsoft Partner Center account.
 Usually it ends with `example.onmicrosoft.com` domain, where _example_ is a subdomain name that was chosen while creating Azure AD instance.
 
-Call this action before any other actions that uses Azure AD API.
+Sapfire uses **OAuth 2.0 Resource Owner Password Credentials authentication method**, which handles the user password directly to sign in.
+Account password and client secret are passing as raw arguments, therefore make sure that your environment is secure enough to work with them and not be at risk of a leak.
+Also, referring to Microsoft documentation, if users need to use multi-factor authentication (MFA) to log in, they will be blocked instead and can't use the service.
 
-**Warning:** as you may have already noticed, there are some raw arguments: the account password and client secret.
-Make sure that your environment is secure enough to work with them and not be at risk of a leak.
-Unfortunately, at this moment there is no any other safer way to get an authorization token.
+Call this action before any other actions that uses Azure AD API.
 
 | Argument        | Description                                                                                  | Env Var               | Default |
 |-----------------|----------------------------------------------------------------------------------------------|-----------------------|---------|
