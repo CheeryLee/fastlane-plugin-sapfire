@@ -22,6 +22,24 @@ module Fastlane
         UI.message("Authorization token was obtained")
 
         UI.message("Creating submission for app #{app_id} ...")
+        pending_submission = Helper::MsDevCenterHelper.non_published_submission(app_id, auth_token, timeout)
+        submission_id = pending_submission["id"]
+
+        unless pending_submission.nil?
+          if params.values.include?(:remove_pending_submission) &&
+             [true].include?(params[:remove_pending_submission])
+            UI.message("Pending submission #{submission_id} were found and scheduled for deletion due to 'remove_pending_submission' argument set to 'true'")
+            Helper::MsDevCenterHelper.remove_submission(app_id, submission_id, auth_token, timeout)
+            UI.message("Pending submission deleted")
+          else
+            UI.user_error!([
+              "There is a pending submission #{submission_id} has already been created.",
+              "You need to either proceed it or remove before creating a new one.",
+              "Set 'remove_pending_submission' argument to 'true' to do that automatically."
+            ].join(" "))
+          end
+        end
+
         submission_obj = Helper::MsDevCenterHelper.create_submission(app_id, auth_token, timeout)
         submission_id = submission_obj["id"]
         UI.message("Submission #{submission_id} created")
@@ -124,6 +142,13 @@ module Fastlane
           FastlaneCore::ConfigItem.new(
             key: :skip_waiting_for_build_processing,
             description: "If set to true, the action will only commit the submission and skip the remaining build validation",
+            optional: true,
+            default_value: false,
+            type: Fastlane::Boolean
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :remove_pending_submission,
+            description: "If set to true, the pending submission halts - a new one will be created automatically",
             optional: true,
             default_value: false,
             type: Fastlane::Boolean

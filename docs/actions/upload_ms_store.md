@@ -18,6 +18,7 @@ problematic aspects.
 | `path`                              | The file path to the package to be uploaded                                                        | `SF_PACKAGE`         |         |
 | `timeout`                           | The timeout for pushing to a server in seconds                                                     | `SF_PUSHING_TIMEOUT` |       0 |
 | `skip_waiting_for_build_processing` | If set to true, the action will only commit the submission and skip the remaining build validation |                      |   false |
+| `remove_pending_submission`         | If set to true, the pending submission halts - a new one will be created automatically             |                      |   false |
 
 Example:
 

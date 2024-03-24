@@ -128,12 +128,6 @@ module Fastlane
 
       def self.create_submission(app_id, auth_token, timeout = 0)
         check_app_id(app_id)
-        if non_published_submission?(app_id, auth_token, timeout)
-          UI.user_error!([
-            "There is a pending submission has already been created.",
-            "You need to either proceed it or remove before creating a new one."
-          ].join(" "))
-        end
 
         connection = Faraday.new(HOST)
 
@@ -193,6 +187,24 @@ module Fastlane
           UI.user_error!("Committing submission request returned the error.\nCode: #{response.status}") unless response.status == 202
         rescue StandardError => ex
           UI.user_error!("Committing submission process failed: #{ex}")
+        end
+      end
+
+      def self.remove_submission(app_id, submission_id, auth_token, timeout = 0)
+        check_app_id(app_id)
+        check_submission_id(submission_id)
+
+        connection = Faraday.new(HOST)
+
+        begin
+          response = connection.delete("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}") do |req|
+            req.headers = build_headers(auth_token)
+            req.options.timeout = timeout if timeout.positive?
+          end
+
+          UI.user_error!("Deleting submission request returned the error.\nCode: #{response.status}") unless response.status == 204
+        rescue StandardError => ex
+          UI.user_error!("Deleting submission process failed: #{ex}")
         end
       end
 
@@ -270,10 +282,10 @@ module Fastlane
         end
       end
 
-      def self.non_published_submission?(app_id, auth_token, timeout = 0)
+      def self.non_published_submission(app_id, auth_token, timeout = 0)
         check_app_id(app_id)
         app_info = get_app_info(app_id, auth_token, timeout)
-        app_info.key?("pendingApplicationSubmission")
+        app_info["pendingApplicationSubmission"]
       end
 
       def self.build_headers(auth_token)
@@ -311,12 +323,13 @@ module Fastlane
       public_class_method(:create_submission)
       public_class_method(:update_submission)
       public_class_method(:commit_submission)
+      public_class_method(:remove_submission)
       public_class_method(:get_submission_status)
       public_class_method(:acquire_authorization_token)
+      public_class_method(:non_published_submission)
 
       private_class_method(:upload_block)
       private_class_method(:upload_block_list)
-      private_class_method(:non_published_submission?)
       private_class_method(:build_headers)
       private_class_method(:parse_upload_url)
       private_class_method(:check_app_id)
