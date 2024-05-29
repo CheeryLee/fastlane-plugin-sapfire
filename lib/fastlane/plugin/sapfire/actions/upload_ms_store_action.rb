@@ -23,9 +23,10 @@ module Fastlane
 
         UI.message("Creating submission for app #{app_id} ...")
         pending_submission = Helper::MsDevCenterHelper.non_published_submission(app_id, auth_token, timeout)
-        submission_id = pending_submission["id"]
 
         unless pending_submission.nil?
+          submission_id = pending_submission["id"]
+
           if params.values.include?(:remove_pending_submission) &&
              [true].include?(params[:remove_pending_submission])
             UI.message("Pending submission #{submission_id} were found and scheduled for deletion due to 'remove_pending_submission' argument set to 'true'")
