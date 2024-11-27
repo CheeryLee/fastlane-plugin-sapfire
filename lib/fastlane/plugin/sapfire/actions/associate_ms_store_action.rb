@@ -11,6 +11,9 @@ module Fastlane
       @vsapi_host = ""
       @vsapi_endpoint = ""
 
+      VS_API_FW_LINK = "2264307".freeze
+      DEV_CENTER_FW_LINK = "2263650".freeze
+      VS_CLIENT_ID = "04f0c124-f2bc-4f59-8241-bf6df9866bbd".freeze
       XML_NAME = "Package.StoreAssociation.xml".freeze
 
       def self.run(params)
@@ -19,8 +22,9 @@ module Fastlane
         begin
           UI.message("Creating #{XML_NAME}...")
 
-          acquire_authorization_token
-          acquire_vsapi_location
+          dev_center_url = acquire_dev_center_location
+          acquire_vs_api_location
+          acquire_authorization_token(dev_center_url)
           ms_developer_info = developer_info
           ms_app_info = app_info(params[:app_id])
           create_xml(params[:manifest], ms_developer_info, ms_app_info)
@@ -161,16 +165,14 @@ module Fastlane
         end
       end
 
-      def self.acquire_authorization_token
+      def self.acquire_authorization_token(resource)
         UI.message("Acquiring authorization token ...")
 
         ms_credentials = Helper.ms_credentials
         body = {
-          client_id: ms_credentials.client_id,
-          client_secret: ms_credentials.client_secret,
-          client_info: 1,
+          client_id: VS_CLIENT_ID,
           grant_type: "password",
-          scope: "https://graph.windows.net/.default offline_access openid profile",
+          scope: "#{resource}/.default",
           username: ms_credentials.username,
           password: ms_credentials.password
         }
@@ -202,9 +204,25 @@ module Fastlane
         end
       end
 
-      def self.acquire_vsapi_location
+      def self.acquire_dev_center_location
+        location = acquire_fw_url(DEV_CENTER_FW_LINK)
+        UI.message("Dev Center location: #{location}")
+
+        location
+      end
+
+      def self.acquire_vs_api_location
+        location = acquire_fw_url(VS_API_FW_LINK)
+        uri = URI(location)
+        @vsapi_host = "#{uri.scheme}://#{uri.host}"
+        @vsapi_endpoint = uri.path
+
+        UI.message("VS API location: #{location}")
+      end
+
+      def self.acquire_fw_url(link_id)
         query = {
-          LinkId: "875315" # VS API constant
+          LinkId: link_id
         }
         connection = Faraday.new("https://go.microsoft.com")
 
@@ -214,14 +232,7 @@ module Fastlane
           if response.status == 302
             raise "'Location' header isn't presented" unless response.headers.include?("Location")
 
-            location = response.headers["Location"]
-            uri = URI(location)
-            @vsapi_host = "#{uri.scheme}://#{uri.host}"
-            @vsapi_endpoint = uri.path
-
-            UI.message("VS API endpoint: #{location}")
-
-            return
+            return response.headers["Location"]
           end
 
           UI.user_error!("Request returned the error: #{response.status}")
