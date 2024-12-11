@@ -128,12 +128,12 @@ module Fastlane
 
             developer_info = DeveloperInfo.new(data["PublisherDisplayName"], data["Publisher"])
 
-            UI.message("Developer info was obtained")
+            UI.success("Developer info was obtained")
 
             return developer_info
           end
 
-          UI.user_error!("Request returned the error: #{response.status}")
+          UI.user_error!("Request completed with non successful status: #{response.status}")
         rescue StandardError => ex
           UI.user_error!("Developer info request failed: #{ex}")
         end
@@ -166,12 +166,12 @@ module Fastlane
             product = data["Products"].find { |x| x["LandingUrl"].include?(app_id) }
             app_info = AppInfo.new(product["MainPackageIdentityName"], product["ReservedNames"])
 
-            UI.message("Application info was obtained")
+            UI.success("Application info was obtained")
 
             return app_info
           end
 
-          UI.user_error!("Request returned the error: #{response.code}")
+          UI.user_error!("Request completed with non successful status: #{response.status}")
         rescue StandardError => ex
           UI.user_error!("Application info request failed: #{ex}")
         end
@@ -202,7 +202,7 @@ module Fastlane
 
           if response.status == 200
             @token = data["access_token"]
-            UI.message("Authorization token was obtained")
+            UI.success("Authorization token was obtained")
 
             return
           end
@@ -217,19 +217,22 @@ module Fastlane
       end
 
       def self.acquire_dev_center_location
+        UI.message("Acquiring Dev Center location ...")
         location = acquire_fw_url(DEV_CENTER_FW_LINK)
-        UI.message("Dev Center location: #{location}")
+        UI.success("URL was obtained: #{location}")
 
         location
       end
 
       def self.acquire_vs_api_location
+        UI.message("Acquiring VS API location ...")
+
         location = acquire_fw_url(VS_API_FW_LINK)
         uri = URI(location)
         @vsapi_host = "#{uri.scheme}://#{uri.host}"
         @vsapi_endpoint = uri.path
 
-        UI.message("VS API location: #{location}")
+        UI.success("URL was obtained: #{location}")
       end
 
       def self.acquire_fw_url(link_id)
@@ -247,7 +250,7 @@ module Fastlane
             return response.headers["Location"]
           end
 
-          UI.user_error!("Request returned the error: #{response.status}")
+          UI.user_error!("Request completed with non successful status: #{response.status}")
         rescue StandardError => ex
           UI.user_error!("Failed to get VS API endpoint location: #{ex}")
         end
