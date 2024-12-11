@@ -120,6 +120,12 @@ module Fastlane
 
           if response.status == 200
             data = JSON.parse(response.body)
+            failure_code = data["FailureCode"]
+            failure_reason = data["FailureReason"]
+
+            UI.user_error!("Request returned the error.\nFailure code: #{failure_code}\nFailure reason: #{failure_reason}") if
+              (!failure_code.nil? && failure_code != 0) || !failure_reason.nil?
+
             developer_info = DeveloperInfo.new(data["PublisherDisplayName"], data["Publisher"])
 
             UI.message("Developer info was obtained")
@@ -151,6 +157,12 @@ module Fastlane
 
           if response.status == 200
             data = JSON.parse(response.body)
+            failure_code = data["FailureCode"]
+            failure_reason = data["FailureReason"]
+
+            UI.user_error!("Request returned the error.\nFailure code: #{failure_code}\nFailure reason: #{failure_reason}") if
+              (!failure_code.nil? && failure_code != 0) || !failure_reason.nil?
+
             product = data["Products"].find { |x| x["LandingUrl"].include?(app_id) }
             app_info = AppInfo.new(product["MainPackageIdentityName"], product["ReservedNames"])
 
