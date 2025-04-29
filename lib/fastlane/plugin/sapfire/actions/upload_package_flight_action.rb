@@ -5,12 +5,14 @@ require_relative "../msbuild/options"
 
 module Fastlane
   module Actions
-    class UploadMsStoreAction < Action
+    class UploadPackageFlightAction < Action
       DEFAULT_TIMEOUT = 300
 
       def self.run(params)
         ms_credentials = Helper.ms_credentials
         app_id = params[:app_id]
+        friendly_name = params[:friendly_name]
+        group_ids = params[:group_ids]
         path = params[:path]
         timeout = params.values.include?(:timeout) && params[:timeout].positive? ? params[:timeout] : DEFAULT_TIMEOUT
 
@@ -20,30 +22,14 @@ module Fastlane
                                                                            ms_credentials.client_secret,
                                                                            timeout)
         UI.message("Authorization token was obtained")
+        UI.message("Creating package flight for app #{app_id} ...")
 
-        UI.message("Creating submission for app #{app_id} ...")
-        pending_submission = Helper::MsDevCenterHelper.non_published_submission(app_id, auth_token, timeout)
-
-        unless pending_submission.nil?
-          submission_id = pending_submission["id"]
-
-          if params.values.include?(:remove_pending_submission) &&
-             [true].include?(params[:remove_pending_submission])
-            UI.message("Pending submission #{submission_id} were found and scheduled for deletion due to 'remove_pending_submission' argument set to 'true'")
-            Helper::MsDevCenterHelper.remove_submission(app_id, submission_id, auth_token, timeout)
-            UI.message("Pending submission deleted")
-          else
-            UI.user_error!([
-              "There is a pending submission #{submission_id} has already been created.",
-              "You need to either proceed it or remove before creating a new one.",
-              "Set 'remove_pending_submission' argument to 'true' to do that automatically."
-            ].join(" "))
-          end
-        end
-
-        submission_obj = Helper::MsDevCenterHelper.create_submission(app_id, auth_token, timeout)
-        submission_id = submission_obj["id"]
-        UI.message("Submission #{submission_id} created")
+        flight_obj = Helper::MsDevCenterHelper.create_flight(app_id, friendly_name, group_ids, auth_token, timeout)
+        flight_id = flight_obj["flightId"]
+        flight_name = flight_obj["friendlyName"]
+        submission_id = flight_obj["pendingFlightSubmission"]["id"]
+        submission_obj = Helper::MsDevCenterHelper.get_submission(app_id, flight_id, submission_id, auth_token, timeout)
+        UI.message("Flight #{flight_name} (ID: #{flight_id}) created")
 
         UI.message("Prepare ZIP blob for upload ...")
         zip_path = Helper::MsDevCenterHelper.create_blob_zip(File.expand_path(path))
@@ -53,7 +39,8 @@ module Fastlane
         Helper::MsDevCenterHelper.upload_blob(submission_obj["fileUploadUrl"], zip_path, timeout)
         UI.success("ZIP blob uploaded successfully")
 
-        submission_obj = prepare_empty_submission(submission_obj)
+        publish_immediate = params.values.include?(:publish_immediate) && [true].include?(params[:publish_immediate])
+        submission_obj = prepare_empty_submission(submission_obj, publish_immediate)
         submission_obj = add_package_to_submission(submission_obj, File.basename(path))
 
         UI.message("Updating submission data ...")
@@ -61,7 +48,7 @@ module Fastlane
         UI.message("Updated successfully")
 
         UI.message("Committing ...")
-        Helper::MsDevCenterHelper.commit_submission(app_id, nil, submission_id, auth_token, timeout)
+        Helper::MsDevCenterHelper.commit_submission(app_id, flight_id, submission_id, auth_token, timeout)
 
         if params.values.include?(:skip_waiting_for_build_processing) &&
            [true].include?(params[:skip_waiting_for_build_processing])
@@ -73,7 +60,7 @@ module Fastlane
         data = nil
         until status
           UI.message("Waiting for the submission to change the status - this may take a few minutes")
-          data = Helper::MsDevCenterHelper.get_submission_status(app_id, nil, submission_id, auth_token, timeout)
+          data = Helper::MsDevCenterHelper.get_submission_status(app_id, flight_id, submission_id, auth_token, timeout)
           status = data["status"] != "CommitStarted"
           sleep(30) unless status
         end
@@ -101,7 +88,7 @@ module Fastlane
       end
 
       def self.description
-        "Uploads new binary to Microsoft Partner Center"
+        "Creates a new package flight submission in Microsoft Partner Center and uploads new binary to it"
       end
 
       def self.authors
@@ -116,6 +103,7 @@ module Fastlane
         [
           ["SF_PUSHING_TIMEOUT", "The timeout for pushing to a server in seconds"],
           ["SF_APP_ID", "The Microsoft Store ID of an application"],
+          ["SF_FLIGHT_FRIENDLY_NAME", "An optional name that would be used as a flight name"],
           ["SF_PACKAGE", "The file path to the package to be uploaded"]
         ]
       end
@@ -148,11 +136,33 @@ module Fastlane
             type: Fastlane::Boolean
           ),
           FastlaneCore::ConfigItem.new(
-            key: :remove_pending_submission,
-            description: "If set to true, the pending submission halts - a new one will be created automatically",
+            key: :publish_immediate,
+            description: "If set to true, the submission will be published automatically once the validation passes",
             optional: true,
             default_value: false,
             type: Fastlane::Boolean
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :friendly_name,
+            env_name: "SF_FLIGHT_FRIENDLY_NAME",
+            description: "An optional name that would be used as a flight name",
+            optional: true,
+            default_value: "",
+            type: String
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :group_ids,
+            description: "A list of tester groups who will get a new package",
+            optional: false,
+            type: Array,
+            verify_block: proc do |array|
+              UI.user_error!("List of tester groups can't be empty") if array.empty?
+
+              array.each do |value|
+                UI.user_error!("Tester group ID must be a string and can't be null or empty") if
+                  !value.is_a?(String) || value.nil? || value.empty?
+              end
+            end
           ),
           FastlaneCore::ConfigItem.new(
             key: :path,
@@ -179,14 +189,14 @@ module Fastlane
       end
 
       def self.category
-        :production
+        :beta
       end
 
       def self.add_package_to_submission(submission_obj, file_name)
         check_submission(submission_obj)
         UI.user_error!("Package file name can't be null or empty") if file_name.nil? || file_name.empty?
 
-        key = "applicationPackages"
+        key = "flightPackages"
         package = {
           "fileName": file_name,
           "fileStatus": "PendingUpload",
@@ -206,36 +216,9 @@ module Fastlane
         submission_obj
       end
 
-      def self.prepare_empty_submission(submission_obj)
+      def self.prepare_empty_submission(submission_obj, publish_immediate)
         check_submission(submission_obj)
-
-        submission_obj["applicationCategory"] = "UtilitiesAndTools" if submission_obj["applicationCategory"] == "NotSet"
-        submission_obj["targetPublishMode"] = "Manual"
-
-        if submission_obj["allowTargetFutureDeviceFamilies"].empty?
-          submission_obj["allowTargetFutureDeviceFamilies"] = {
-            "Desktop": false,
-            "Mobile": false,
-            "Holographic": false,
-            "Xbox": false
-          }
-        end
-
-        if submission_obj["listings"].empty?
-          submission_obj["listings"]["en-us"] = {}
-          submission_obj["listings"]["en-us"]["baseListing"] = {
-            "description": "1",
-            "privacyPolicy": "https://example.com",
-            "images": [
-              {
-                "fileName": "ms_example_screenshot.png",
-                "fileStatus": "PendingUpload",
-                "imageType": "Screenshot"
-              }
-            ]
-          }
-        end
-
+        submission_obj["targetPublishMode"] = publish_immediate ? "Immediate" : "Manual"
         submission_obj
       end
 

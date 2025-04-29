@@ -10,6 +10,20 @@ module Fastlane
       FILE_CHUNK_SIZE = 26_214_400
       UPLOAD_RETRIES = 3
 
+      def self.create_blob_zip(package_path)
+        zip_path = File.join(File.dirname(package_path), "blob.zip")
+        File.delete(zip_path) if File.exist?(zip_path)
+
+        Zip::File.open(zip_path, create: true) do |file|
+          file.add(File.basename(package_path), package_path)
+
+          screenshot_path = File.join(Helper::SapfireHelper.root_plugin_location, "assets", "ms_example_screenshot.png")
+          file.add("ms_example_screenshot.png", File.expand_path(screenshot_path))
+        end
+
+        zip_path
+      end
+
       def self.upload_blob(url, zip_path, timeout = 0)
         UI.user_error!("File upload URL need to be provided") if !url.is_a?(String) || url.nil? || url.empty?
         UI.user_error!("File path is invalid") if !zip_path.is_a?(String) || zip_path.nil? || zip_path.empty?
@@ -110,9 +124,10 @@ module Fastlane
         check_app_id(app_id)
 
         connection = Faraday.new(HOST)
+        url = build_url_root(app_id)
 
         begin
-          response = connection.get("/#{API_VERSION}/#{API_ROOT}/#{app_id}") do |req|
+          response = connection.get(url) do |req|
             req.headers = build_headers(auth_token)
             req.options.timeout = timeout if timeout.positive?
           end
@@ -126,13 +141,44 @@ module Fastlane
         end
       end
 
+      def self.get_submission(app_id, flight_id, submission_id, auth_token, timeout = 0)
+        check_app_id(app_id)
+        check_submission_id(submission_id)
+
+        is_flight = !flight_id.nil? && !flight_id.empty?
+        check_flight_id(flight_id) if is_flight
+
+        connection = Faraday.new(HOST)
+        url = build_url_root(app_id)
+        url += "/flights/#{flight_id}" if is_flight
+        url += "/submissions/#{submission_id}"
+
+        begin
+          response = connection.get(url) do |req|
+            req.headers = build_headers(auth_token)
+            req.options.timeout = timeout if timeout.positive?
+          end
+          data = JSON.parse(response.body)
+
+          return data if response.status == 200
+
+          code = data["code"]
+          message = data["message"]
+
+          UI.user_error!("Getting flight submission request returned the error.\nCode: #{response.status} #{code}.\nDescription: #{message}")
+        rescue StandardError => ex
+          UI.user_error!("Getting flight submission process failed: #{ex}")
+        end
+      end
+
       def self.create_submission(app_id, auth_token, timeout = 0)
         check_app_id(app_id)
 
         connection = Faraday.new(HOST)
+        url = "#{build_url_root(app_id)}/submissions"
 
         begin
-          response = connection.post("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions") do |req|
+          response = connection.post(url) do |req|
             req.headers = build_headers(auth_token)
             req.options.timeout = timeout if timeout.positive?
           end
@@ -153,11 +199,15 @@ module Fastlane
         check_app_id(app_id)
         UI.user_error!("Submission data object need to be provided") if submission_obj.nil?
 
-        submission_id = submission_obj["id"]
         connection = Faraday.new(HOST)
+        flight_id = submission_obj["flightId"]
+        submission_id = submission_obj["id"]
+        url = build_url_root(app_id)
+        url += "/flights/#{flight_id}" if !flight_id.nil? && !flight_id.empty?
+        url += "/submissions/#{submission_id}"
 
         begin
-          response = connection.put("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}") do |req|
+          response = connection.put(url) do |req|
             req.headers = build_headers(auth_token)
             req.body = submission_obj.to_json
             req.options.timeout = timeout if timeout.positive?
@@ -172,14 +222,20 @@ module Fastlane
         end
       end
 
-      def self.commit_submission(app_id, submission_id, auth_token, timeout = 0)
+      def self.commit_submission(app_id, flight_id, submission_id, auth_token, timeout = 0)
         check_app_id(app_id)
         check_submission_id(submission_id)
 
+        is_flight = !flight_id.nil? && !flight_id.empty?
+        check_flight_id(flight_id) if is_flight
+
         connection = Faraday.new(HOST)
+        url = build_url_root(app_id)
+        url += "/flights/#{flight_id}" if is_flight
+        url += "/submissions/#{submission_id}/commit"
 
         begin
-          response = connection.post("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}/commit") do |req|
+          response = connection.post(url) do |req|
             req.headers = build_headers(auth_token)
             req.options.timeout = timeout if timeout.positive?
           end
@@ -195,9 +251,10 @@ module Fastlane
         check_submission_id(submission_id)
 
         connection = Faraday.new(HOST)
+        url = "#{build_url_root(app_id)}/submissions/#{submission_id}"
 
         begin
-          response = connection.delete("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}") do |req|
+          response = connection.delete(url) do |req|
             req.headers = build_headers(auth_token)
             req.options.timeout = timeout if timeout.positive?
           end
@@ -208,11 +265,12 @@ module Fastlane
         end
       end
 
-      def self.get_submission_status(app_id, submission_id, auth_token, timeout = 0)
+      def self.get_submission_status(app_id, flight_id, submission_id, auth_token, timeout = 0)
         check_app_id(app_id)
+        check_flight_id(flight_id) if !flight_id.nil? && !flight_id.empty?
         check_submission_id(submission_id)
 
-        response = get_submission_status_internal(app_id, submission_id, auth_token, timeout)
+        response = get_submission_status_internal(app_id, flight_id, submission_id, auth_token, timeout)
 
         # Sometimes MS can return internal server error code (500) that is not directly related to uploading process.
         # Once it happens, retry 3 times until we'll get a success response.
@@ -221,7 +279,7 @@ module Fastlane
 
           until server_error_500_retry_counter < 2
             server_error_500_retry_counter += 1
-            response = get_submission_status_internal(app_id, submission_id, auth_token, timeout)
+            response = get_submission_status_internal(app_id, flight_id, submission_id, auth_token, timeout)
             break if response.nil? || response[:status] == 200
           end
         end
@@ -231,11 +289,14 @@ module Fastlane
         UI.user_error!("Submission status obtaining request returned the error.\nCode: #{response[:status]}")
       end
 
-      def self.get_submission_status_internal(app_id, submission_id, auth_token, timeout = 0)
+      def self.get_submission_status_internal(app_id, flight_id, submission_id, auth_token, timeout = 0)
         connection = Faraday.new(HOST)
+        url = build_url_root(app_id)
+        url += "/flights/#{flight_id}/" if !flight_id.nil? && !flight_id.empty?
+        url += "/submissions/#{submission_id}/status"
 
         begin
-          response = connection.get("/#{API_VERSION}/#{API_ROOT}/#{app_id}/submissions/#{submission_id}/status") do |req|
+          response = connection.get(url) do |req|
             req.headers = build_headers(auth_token)
             req.options.timeout = timeout if timeout.positive?
           end
@@ -248,6 +309,36 @@ module Fastlane
           }
         rescue StandardError => ex
           UI.user_error!("Submission status obtaining process failed: #{ex}")
+        end
+      end
+
+      def self.create_flight(app_id, friendly_name, group_ids, auth_token, timeout = 0)
+        check_app_id(app_id)
+
+        friendly_name = !friendly_name.nil? && !friendly_name.empty? ? friendly_name : "Fastlane Sapfire Flight"
+        body = {
+          friendlyName: friendly_name,
+          groupIds: group_ids
+        }
+        connection = Faraday.new(HOST)
+        url = "#{build_url_root(app_id)}/flights"
+
+        begin
+          response = connection.post(url) do |req|
+            req.headers = build_headers(auth_token)
+            req.body = body.to_json
+            req.options.timeout = timeout if timeout.positive?
+          end
+          data = JSON.parse(response.body)
+
+          return data if response.status == 201
+
+          code = data["code"]
+          message = data["message"]
+
+          UI.user_error!("Creating flight request returned the error.\nCode: #{response.status} #{code}.\nDescription: #{message}")
+        rescue StandardError => ex
+          UI.user_error!("Creating flight process failed: #{ex}")
         end
       end
 
@@ -288,6 +379,10 @@ module Fastlane
         app_info["pendingApplicationSubmission"]
       end
 
+      def self.build_url_root(app_id)
+        "/#{API_VERSION}/#{API_ROOT}/#{app_id}"
+      end
+
       def self.build_headers(auth_token)
         {
           "Authorization": "Bearer #{auth_token}",
@@ -318,18 +413,26 @@ module Fastlane
         UI.user_error!("Submission ID need to be provided") if !id.is_a?(String) || id.nil? || id.empty?
       end
 
+      def self.check_flight_id(id)
+        UI.user_error!("Flight ID need to be provided") if !id.is_a?(String) || id.nil? || id.empty?
+      end
+
+      public_class_method(:create_blob_zip)
       public_class_method(:upload_blob)
       public_class_method(:get_app_info)
+      public_class_method(:get_submission)
       public_class_method(:create_submission)
       public_class_method(:update_submission)
       public_class_method(:commit_submission)
       public_class_method(:remove_submission)
       public_class_method(:get_submission_status)
+      public_class_method(:create_flight)
       public_class_method(:acquire_authorization_token)
       public_class_method(:non_published_submission)
 
       private_class_method(:upload_block)
       private_class_method(:upload_block_list)
+      private_class_method(:build_url_root)
       private_class_method(:build_headers)
       private_class_method(:parse_upload_url)
       private_class_method(:check_app_id)
