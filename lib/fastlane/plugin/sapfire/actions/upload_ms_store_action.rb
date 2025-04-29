@@ -1,6 +1,7 @@
 require "fastlane/action"
 require_relative "../helper/ms_credentials"
 require_relative "../helper/ms_devcenter_helper"
+require_relative "../helper/azure_blob_helper"
 require_relative "../msbuild/options"
 
 module Fastlane
@@ -46,11 +47,11 @@ module Fastlane
         UI.message("Submission #{submission_id} created")
 
         UI.message("Prepare ZIP blob for upload ...")
-        zip_path = Helper::MsDevCenterHelper.create_blob_zip(File.expand_path(path))
+        zip_path = Helper::AzureBlobHelper.create_blob_zip(File.expand_path(path))
         UI.success("Blob is ready")
 
         UI.message("Uploading ZIP blob ...")
-        Helper::MsDevCenterHelper.upload_blob(submission_obj["fileUploadUrl"], zip_path, timeout)
+        Helper::AzureBlobHelper.upload_blob(submission_obj["fileUploadUrl"], zip_path, timeout)
         UI.success("ZIP blob uploaded successfully")
 
         submission_obj = prepare_empty_submission(submission_obj)
