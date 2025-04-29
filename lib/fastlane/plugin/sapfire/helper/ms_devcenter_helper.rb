@@ -261,12 +261,6 @@ module Fastlane
         end
       end
 
-      def self.non_published_submission(app_id, auth_token, timeout = 0)
-        check_app_id(app_id)
-        app_info = get_app_info(app_id, auth_token, timeout)
-        app_info["pendingApplicationSubmission"]
-      end
-
       def self.build_url_root(app_id)
         "/#{API_VERSION}/#{API_ROOT}/#{app_id}"
       end
@@ -300,7 +294,6 @@ module Fastlane
       public_class_method(:get_submission_status)
       public_class_method(:create_flight)
       public_class_method(:acquire_authorization_token)
-      public_class_method(:non_published_submission)
 
       private_class_method(:build_url_root)
       private_class_method(:build_headers)

@@ -23,7 +23,8 @@ module Fastlane
         UI.message("Authorization token was obtained")
 
         UI.message("Creating submission for app #{app_id} ...")
-        pending_submission = Helper::MsDevCenterHelper.non_published_submission(app_id, auth_token, timeout)
+        app_info = get_app_info(app_id, auth_token, timeout)
+        pending_submission = app_info["pendingApplicationSubmission"]
 
         unless pending_submission.nil?
           submission_id = pending_submission["id"]

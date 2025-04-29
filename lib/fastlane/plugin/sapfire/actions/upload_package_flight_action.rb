@@ -12,7 +12,7 @@ module Fastlane
       def self.run(params)
         ms_credentials = Helper.ms_credentials
         app_id = params[:app_id]
-        friendly_name = params[:friendly_name]
+        flight_name = params[:name]
         group_ids = params[:group_ids]
         path = params[:path]
         timeout = params.values.include?(:timeout) && params[:timeout].positive? ? params[:timeout] : DEFAULT_TIMEOUT
@@ -25,7 +25,7 @@ module Fastlane
         UI.message("Authorization token was obtained")
         UI.message("Creating package flight for app #{app_id} ...")
 
-        flight_obj = Helper::MsDevCenterHelper.create_flight(app_id, friendly_name, group_ids, auth_token, timeout)
+        flight_obj = Helper::MsDevCenterHelper.create_flight(app_id, flight_name, group_ids, auth_token, timeout)
         flight_id = flight_obj["flightId"]
         flight_name = flight_obj["friendlyName"]
         submission_id = flight_obj["pendingFlightSubmission"]["id"]
@@ -104,7 +104,7 @@ module Fastlane
         [
           ["SF_PUSHING_TIMEOUT", "The timeout for pushing to a server in seconds"],
           ["SF_APP_ID", "The Microsoft Store ID of an application"],
-          ["SF_FLIGHT_FRIENDLY_NAME", "An optional name that would be used as a flight name"],
+          ["SF_FLIGHT_NAME", "An optional name that would be used as a flight name"],
           ["SF_PACKAGE", "The file path to the package to be uploaded"]
         ]
       end
@@ -144,8 +144,8 @@ module Fastlane
             type: Fastlane::Boolean
           ),
           FastlaneCore::ConfigItem.new(
-            key: :friendly_name,
-            env_name: "SF_FLIGHT_FRIENDLY_NAME",
+            key: :name,
+            env_name: "SF_FLIGHT_NAME",
             description: "An optional name that would be used as a flight name",
             optional: true,
             default_value: "",
