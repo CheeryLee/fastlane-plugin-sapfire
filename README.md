@@ -90,6 +90,11 @@ Here is the list of all available actions. Read the documentation on each one by
 |--------------------------------------------------------|-----------------------------------------------------------------------------|--------------------:|
 | [app_certification](docs/actions/app_certification.md) | Runs Windows App Certification Kit to ensure your app is safe and efficient |             windows |
 
+#### 🐛 Beta
+
+| Argument                                                       | Description                                                            | Supported platforms |
+|----------------------------------------------------------------|------------------------------------------------------------------------|--------------------:|
+| [upload_package_flight](docs/actions/upload_package_flight.md) | Uploads new binary to Microsoft Partner Center as a new package flight |             windows |
 
 #### 📦 Releasing
 
